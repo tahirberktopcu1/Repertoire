@@ -1,0 +1,33 @@
+{
+  "name": "Repertoire - Grup Müzik Yöneticisi",
+  "short_name": "Repertoire",
+  "description": "Grubunuzun repertuvarını yönetin, şarkıları oylayın ve prova planlayın.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#58a6ff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
