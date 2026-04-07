@@ -66,19 +66,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = async () => {
+    // Önce cookie'leri temizle
+    document.cookie.split(';').forEach((c) => {
+      const name = c.trim().split('=')[0]
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`
+    })
+    // localStorage temizle
+    Object.keys(localStorage).forEach((key) => {
+      if (key.includes('supabase') || key.includes('sb-')) localStorage.removeItem(key)
+    })
+    // Supabase signOut dene (asılı kalırsa sorun değil)
     try {
       const supabase = createClient()
-      await supabase.auth.signOut()
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+      ])
     } catch {}
     setUser(null)
     setProfile(null)
-    // Cookie'leri manuel temizle
-    document.cookie.split(';').forEach((c) => {
-      const name = c.trim().split('=')[0]
-      if (name.includes('supabase') || name.includes('sb-')) {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-      }
-    })
     window.location.href = '/auth/login'
   }
 
