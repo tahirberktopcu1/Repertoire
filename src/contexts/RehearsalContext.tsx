@@ -44,7 +44,20 @@ export function RehearsalProvider({ children }: { children: ReactNode }) {
 
   const [activeRehearsal, setActiveRehearsal] = useState<Rehearsal | null>(null)
   const [isRehearsalOver, setIsRehearsalOver] = useState(false)
-  const [pendingSongIds, setPendingSongIds] = useState<string[]>([])
+  const [pendingSongIds, setPendingSongIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem('pendingSongIds')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
+
+  // pendingSongIds değişince localStorage'a kaydet
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pendingSongIds', JSON.stringify(pendingSongIds))
+    }
+  }, [pendingSongIds])
 
   const loadRehearsal = useCallback(async () => {
     if (!currentBand) return
@@ -163,6 +176,7 @@ export function RehearsalProvider({ children }: { children: ReactNode }) {
     await supabase.from('rehearsals').delete().eq('id', activeRehearsal.id)
     setActiveRehearsal(null)
     setIsRehearsalOver(false)
+    setPendingSongIds([])
   }
 
   const clearRehearsal = () => {
@@ -171,6 +185,7 @@ export function RehearsalProvider({ children }: { children: ReactNode }) {
     }
     setActiveRehearsal(null)
     setIsRehearsalOver(false)
+    setPendingSongIds([])
   }
 
   const addSongToRehearsal = async (songId: string) => {
