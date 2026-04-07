@@ -66,17 +66,19 @@ export default function SettingsPage() {
     setJoinLoading(true)
     setJoinError('')
 
-    const { data: band } = await supabase
+    const { data: bands, error: searchErr } = await supabase
       .from('bands')
-      .select('*')
+      .select('id, name, invite_code')
       .eq('invite_code', joinCode.trim())
-      .maybeSingle()
+      .limit(1)
 
-    if (!band) {
+    if (searchErr || !bands || bands.length === 0) {
       setJoinError('Geçersiz davet kodu')
       setJoinLoading(false)
       return
     }
+
+    const band = bands[0]
 
     // user_id DEFAULT auth.uid() — Supabase RLS otomatik halleder
     const { error: insertErr } = await supabase.from('band_members').insert({ band_id: band.id })

@@ -66,10 +66,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch {}
     setUser(null)
     setProfile(null)
+    // Cookie'leri manuel temizle
+    document.cookie.split(';').forEach((c) => {
+      const name = c.trim().split('=')[0]
+      if (name.includes('supabase') || name.includes('sb-')) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
+      }
+    })
     window.location.href = '/auth/login'
   }
 
