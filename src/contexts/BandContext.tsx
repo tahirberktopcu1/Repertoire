@@ -87,6 +87,31 @@ export function BandProvider({ children }: { children: ReactNode }) {
     }
   }, [currentBand])
 
+  // Realtime: üye değişiklikleri, grup güncellemeleri anlık
+  useEffect(() => {
+    if (!currentBand) return
+
+    const channel = supabase
+      .channel(`band-mgmt-${currentBand.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_members', filter: `band_id=eq.${currentBand.id}` }, () => {
+        refreshMembers()
+        refreshBands()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bands', filter: `id=eq.${currentBand.id}` }, (payload) => {
+        if (payload.eventType === 'DELETE') {
+          // Grup silindi — diğer kullanıcıları bilgilendir
+          window.location.href = '/dashboard'
+        } else if (payload.eventType === 'UPDATE') {
+          refreshBands()
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentBand?.id])
+
   const renameBand = async (name: string) => {
     if (!currentBand || !name.trim()) return
     await supabase.from('bands').update({ name: name.trim() }).eq('id', currentBand.id)

@@ -21,17 +21,29 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
   const [locations, setLocations] = useState<string[]>([])
   const supabase = createClient()
 
+  const loadLocations = async () => {
+    if (!currentBand) return
+    const { data } = await supabase
+      .from('locations')
+      .select('name')
+      .eq('band_id', currentBand.id)
+    if (data) setLocations(data.map((d: any) => d.name))
+  }
+
   useEffect(() => {
     if (!currentBand) return
-    const load = async () => {
-      const { data } = await supabase
-        .from('locations')
-        .select('name')
-        .eq('band_id', currentBand.id)
-      if (data) setLocations(data.map((d: any) => d.name))
-    }
-    load()
-  }, [currentBand])
+    loadLocations()
+
+    // Realtime: konum değişiklikleri anlık
+    const channel = supabase
+      .channel(`locations-${currentBand.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations', filter: `band_id=eq.${currentBand.id}` }, () => {
+        loadLocations()
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [currentBand?.id])
 
   const addLocation = async (name: string) => {
     if (!name.trim() || !currentBand || locations.includes(name.trim())) return
