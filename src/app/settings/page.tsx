@@ -44,19 +44,16 @@ export default function SettingsPage() {
     if (!newGroupName.trim()) return
     setCreateLoading(true)
 
-    let userId = user?.id
-    if (!userId) {
-      const { data: { user: u } } = await supabase.auth.getUser()
-      userId = u?.id
-    }
-    if (!userId) { setCreateLoading(false); return }
-
-    const { data: band } = await supabase.from('bands')
-      .insert({ name: newGroupName.trim(), created_by: userId })
+    // RLS auth.uid() otomatik kullanır — userId göndermeye gerek yok
+    const { data: band, error: bandErr } = await supabase.from('bands')
+      .insert({ name: newGroupName.trim() })
       .select().single()
 
+    if (bandErr) { setCreateLoading(false); alert('Grup oluşturulamadı: ' + bandErr.message); return }
+
     if (band) {
-      await supabase.from('band_members').insert({ band_id: band.id, user_id: userId })
+      // band_members'a da ekle
+      await supabase.from('band_members').insert({ band_id: band.id })
       await refreshBands()
     }
     setNewGroupName('')
@@ -65,27 +62,15 @@ export default function SettingsPage() {
   }
 
   const handleJoin = async () => {
-    console.log('[JOIN] başladı, kod:', joinCode.trim())
     if (!joinCode.trim()) { setJoinError('Davet kodu girin'); return }
     setJoinLoading(true)
     setJoinError('')
 
-    let userId = user?.id
-    console.log('[JOIN] user from context:', userId)
-    if (!userId) {
-      const { data: { user: u }, error: authErr } = await supabase.auth.getUser()
-      userId = u?.id
-      console.log('[JOIN] user from getUser:', userId, authErr?.message)
-    }
-    if (!userId) { setJoinError('Oturum bulunamadı, tekrar giriş yapın'); setJoinLoading(false); return }
-
-    console.log('[JOIN] band aranıyor...')
-    const { data: band, error: bandErr } = await supabase
+    const { data: band } = await supabase
       .from('bands')
       .select('*')
       .eq('invite_code', joinCode.trim())
       .maybeSingle()
-    console.log('[JOIN] band:', band?.id, band?.name, 'error:', bandErr?.message)
 
     if (!band) {
       setJoinError('Geçersiz davet kodu')
@@ -93,30 +78,13 @@ export default function SettingsPage() {
       return
     }
 
-    console.log('[JOIN] üyelik kontrol...')
-    const { data: existing } = await supabase
-      .from('band_members')
-      .select('id')
-      .eq('band_id', band.id)
-      .eq('user_id', userId)
-      .maybeSingle()
-    console.log('[JOIN] existing:', existing)
-
-    if (existing) {
-      setJoinError('Bu gruba zaten üyesiniz')
-      setJoinLoading(false)
-      return
-    }
-
-    console.log('[JOIN] insert yapılıyor...')
-    const { error: insertErr } = await supabase.from('band_members').insert({ band_id: band.id, user_id: userId })
-    console.log('[JOIN] insert result:', insertErr?.message || 'OK')
+    // user_id DEFAULT auth.uid() — Supabase RLS otomatik halleder
+    const { error: insertErr } = await supabase.from('band_members').insert({ band_id: band.id })
     if (insertErr) {
       setJoinError('Katılma hatası: ' + insertErr.message)
       setJoinLoading(false)
       return
     }
-    console.log('[JOIN] refreshBands...')
     await refreshBands()
     setJoinCode('')
     setShowJoinForm(false)

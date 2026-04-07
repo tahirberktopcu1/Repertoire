@@ -28,40 +28,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient()
     let mounted = true
 
-    // onAuthStateChange TEK kaynak olarak kullan
-    // Bu hem ilk yükleme (INITIAL_SESSION) hem sonraki değişiklikleri yakalar
+    const setUserAndProfile = async (u: User | null) => {
+      if (!mounted) return
+      setUser(u)
+      if (u) {
+        const { data } = await supabase.from('profiles').select('*').eq('id', u.id).single()
+        if (mounted) setProfile(data)
+      } else {
+        setProfile(null)
+      }
+      if (mounted) setLoading(false)
+    }
+
+    // 1. getUser ile dene (en güvenilir, server'a sorar)
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (u && mounted) setUserAndProfile(u)
+    }).catch(() => {})
+
+    // 2. onAuthStateChange dinle
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: any, session: any) => {
+      async (_event: any, session: any) => {
         if (!mounted) return
-
-        const currentUser = session?.user ?? null
-        setUser(currentUser)
-
-        if (currentUser) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single()
-          if (mounted) setProfile(data)
-          // User bulundu — loading'i kapat
-          if (mounted) setLoading(false)
-        } else if (event !== 'INITIAL_SESSION') {
-          // SIGNED_OUT gibi event'lerde loading'i kapat
-          setProfile(null)
-          if (mounted) setLoading(false)
-        }
-        // INITIAL_SESSION + user null → loading true kalsın, SIGNED_IN gelebilir
-        // Fallback timeout ile yakalanacak
+        await setUserAndProfile(session?.user ?? null)
       }
     )
 
-    // Fallback: 5 saniye içinde hiç event gelmezse loading'i kapat
+    // 3. Fallback: 3 saniye içinde hiçbir şey olmazsa loading kapat
     const timeout = setTimeout(() => {
-      if (mounted && loading) {
-        setLoading(false)
-      }
-    }, 2000)
+      if (mounted && loading) setLoading(false)
+    }, 3000)
 
     return () => {
       mounted = false
