@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Check,
   Users,
+  Pencil,
+  X,
 } from 'lucide-react'
 
 interface VoteDetail {
@@ -23,6 +25,7 @@ interface SongCardProps {
   onRate?: (value: number) => void
   onAddToRepertoire?: () => void
   onRemove?: () => void
+  onEdit?: (title: string, artist: string) => void
   showVoting?: boolean
   isTopSong?: boolean
   rank?: number
@@ -74,6 +77,7 @@ export default function SongCard({
   onRate,
   onAddToRepertoire,
   onRemove,
+  onEdit,
   showVoting = true,
   isTopSong = false,
   notRated = false,
@@ -88,6 +92,9 @@ export default function SongCard({
   const [showDefPanel, setShowDefPanel] = useState(false)
   const [newDeficiency, setNewDeficiency] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(song.title)
+  const [editArtist, setEditArtist] = useState(song.artist || '')
 
   const addDeficiency = () => {
     if (!newDeficiency.trim() || !onAddDeficiency) return
@@ -115,9 +122,51 @@ export default function SongCard({
           )}
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-[var(--text-primary)] font-semibold truncate">{song.title}</h3>
-            {song.artist && (
-              <p className="text-[var(--text-secondary)] text-sm truncate">{song.artist}</p>
+            {editing ? (
+              <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-2 py-1 bg-[var(--bg-secondary)] border border-[var(--accent)] rounded text-[var(--text-primary)] text-sm focus:outline-none"
+                  placeholder="Şarkı adı"
+                />
+                <input
+                  type="text"
+                  value={editArtist}
+                  onChange={(e) => setEditArtist(e.target.value)}
+                  className="w-full px-2 py-1 bg-[var(--bg-secondary)] border border-[var(--accent)] rounded text-[var(--text-primary)] text-sm focus:outline-none"
+                  placeholder="Sanatçı"
+                />
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { onEdit?.(editTitle, editArtist); setEditing(false) }}
+                    className="px-2 py-1 bg-[var(--accent)] text-white rounded text-xs"
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => { setEditTitle(song.title); setEditArtist(song.artist || ''); setEditing(false) }}
+                    className="px-2 py-1 bg-[var(--bg-secondary)] text-[var(--text-muted)] rounded text-xs"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-1">
+                  <h3 className="text-[var(--text-primary)] font-semibold truncate">{song.title}</h3>
+                  {onEdit && (
+                    <button onClick={(e) => { e.stopPropagation(); setEditing(true) }} className="text-[var(--text-muted)] hover:text-[var(--accent)] flex-shrink-0">
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                {song.artist && (
+                  <p className="text-[var(--text-secondary)] text-sm truncate">{song.artist}</p>
+                )}
+              </>
             )}
             <div className="flex items-center gap-2 mt-1">
               <p className="text-[var(--text-muted)] text-xs">Öneren: {song.suggested_by_name}</p>

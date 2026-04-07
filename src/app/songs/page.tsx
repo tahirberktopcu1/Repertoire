@@ -18,7 +18,7 @@ type TabType = 'unrated' | 'pending' | 'ready'
 export default function SongsPage() {
   const { user } = useAuth()
   const { members } = useBand()
-  const { songs, votes, addSong, removeSong, moveToRepertoire, rateSong } = useSongs()
+  const { songs, votes, addSong, removeSong, moveToRepertoire, rateSong, editSong } = useSongs()
   const { addSongToRehearsal } = useRehearsal()
   const { toast } = useToast()
   const userId = user?.id || ''
@@ -164,6 +164,7 @@ export default function SongsPage() {
                     onRate={(value) => handleRate(song.id, value)}
                     onAddToRepertoire={isReady ? () => { moveToRepertoire(song.id); addSongToRehearsal(song.id); toast('Repertuvara eklendi!') } : undefined}
                     onRemove={() => { removeSong(song.id); toast('Şarkı silindi!') }}
+                    onEdit={(t, a) => { editSong(song.id, t, a); toast('Şarkı güncellendi!') }}
                     rank={tab === 'ready' ? i + 1 : undefined}
                     notRated={tab === 'unrated'}
                     voteDetails={votes

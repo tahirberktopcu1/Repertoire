@@ -35,13 +35,12 @@ export default function SongAddForm({ onAdd, submitLabel = 'Öner' }: SongAddFor
     const info = await detectSongInfo(url)
     setDetecting(false)
 
-    if (info) {
+    if (info && (info.title || info.artist)) {
       if (info.title) setTitle(capitalizeWords(info.title))
       if (info.artist) setArtist(capitalizeWords(info.artist))
-      setDetected(true)
-    } else {
-      setDetected(true) // Form göster ama boş
     }
+    // Her durumda formu göster — bilgi bulunamadıysa boş gelir, kullanıcı yazar
+    setDetected(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

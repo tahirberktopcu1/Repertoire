@@ -34,6 +34,7 @@ interface SongsContextType {
   rateSong: (songId: string, value: number) => Promise<void>
   addDirectToRepertoire: (title: string, artist: string, spotifyUrl?: string, youtubeUrl?: string) => Promise<string>
   rateRepertoireSong: (songId: string, value: number) => Promise<void>
+  editSong: (songId: string, title: string, artist: string) => Promise<void>
   addDeficiency: (songId: string, content: string, assignedTo: string | null, assignedToName: string) => Promise<void>
   resolveDeficiency: (songId: string, defId: string) => Promise<void>
   restoreFromTrash: (songId: string) => Promise<void>
@@ -48,7 +49,7 @@ const SongsContext = createContext<SongsContextType>({
   addSong: async () => {}, removeSong: async () => {}, moveToRepertoire: async () => {},
   removeFromRepertoire: async () => {}, reorderRepertoire: () => {},
   rateSong: async () => {}, addDirectToRepertoire: async () => '',
-  rateRepertoireSong: async () => {}, addDeficiency: async () => {},
+  rateRepertoireSong: async () => {}, editSong: async () => {}, addDeficiency: async () => {},
   resolveDeficiency: async () => {}, restoreFromTrash: async () => {},
   deleteFromTrash: async () => {}, emptyTrash: async () => {}, refresh: async () => {},
 })
@@ -265,6 +266,11 @@ export function SongsProvider({ children }: { children: ReactNode }) {
     await refresh()
   }
 
+  const editSong = async (songId: string, title: string, artist: string) => {
+    await supabase.from('songs').update({ title, artist }).eq('id', songId)
+    await refresh()
+  }
+
   const addDeficiency = async (songId: string, content: string, assignedTo: string | null, _assignedToName: string) => {
     if (!user) return
     await supabase.from('deficiencies').insert({
@@ -303,7 +309,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
       repertoireVotes, trash, loading,
       addSong, removeSong, moveToRepertoire, removeFromRepertoire, reorderRepertoire,
       rateSong, addDirectToRepertoire, rateRepertoireSong,
-      addDeficiency, resolveDeficiency, restoreFromTrash, deleteFromTrash, emptyTrash, refresh,
+      editSong, addDeficiency, resolveDeficiency, restoreFromTrash, deleteFromTrash, emptyTrash, refresh,
     }}>
       {children}
     </SongsContext.Provider>
