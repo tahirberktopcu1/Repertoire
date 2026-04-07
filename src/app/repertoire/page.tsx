@@ -330,13 +330,15 @@ export default function RepertoirePage() {
                     <div className="border-t border-[var(--border)] p-4 bg-[var(--bg-secondary)] space-y-4">
                       {/* Düzenle butonu */}
                       {editingSong !== song.id && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditingSong(song.id); setEditTitle(song.title); setEditArtist(song.artist || '') }}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--accent)] transition-colors w-full"
-                        >
-                          <Pencil className="w-4 h-4" />
-                          <span>Düzenle</span>
-                        </button>
+                        <div className="flex justify-end mb-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingSong(song.id); setEditTitle(song.title); setEditArtist(song.artist || '') }}
+                            className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] hover:opacity-90 text-white rounded-lg text-sm font-medium transition-opacity"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Düzenle
+                          </button>
+                        </div>
                       )}
 
                       {/* Puanlama */}
