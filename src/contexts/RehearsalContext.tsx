@@ -92,6 +92,19 @@ export function RehearsalProvider({ children }: { children: ReactNode }) {
     loadRehearsal()
   }, [loadRehearsal])
 
+  // Realtime: rehearsal_songs ve rehearsals değişikliklerini dinle
+  useEffect(() => {
+    if (!currentBand) return
+
+    const channel = supabase
+      .channel(`rehearsal-rt-${currentBand.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rehearsals', filter: `band_id=eq.${currentBand.id}` }, () => loadRehearsal())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rehearsal_songs' }, () => loadRehearsal())
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [currentBand?.id])
+
   // Her dakika bitiş kontrolü
   useEffect(() => {
     const interval = setInterval(() => {
