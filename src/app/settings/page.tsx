@@ -19,11 +19,13 @@ import {
   Pencil,
   Trash2,
   DoorOpen,
+  Loader2,
 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import FullScreenLoader from '@/components/FullScreenLoader'
 
 export default function SettingsPage() {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, signingOut } = useAuth()
   const { currentBand, members, renameBand, deleteBand, leaveBand, refreshBands } = useBand()
   const [editingName, setEditingName] = useState(false)
   const [bandName, setBandName] = useState(currentBand?.name || '')
@@ -39,6 +41,7 @@ export default function SettingsPage() {
   const [joinLoading, setJoinLoading] = useState(false)
   const supabase = createClient()
   const [newLocation, setNewLocation] = useState('')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const handleCreateGroup = async () => {
     if (!newGroupName.trim()) return
@@ -99,10 +102,39 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const handleAddLocation = () => {
+  const handleAddLocation = async () => {
     if (!newLocation.trim()) return
-    addLocation(newLocation.trim())
+    setActionLoading('addLocation')
+    await addLocation(newLocation.trim())
     setNewLocation('')
+    setActionLoading(null)
+  }
+
+  const handleRemoveLocation = async (loc: string) => {
+    setActionLoading(`removeLocation-${loc}`)
+    await removeLocation(loc)
+    setActionLoading(null)
+  }
+
+  const handleRenameBand = async () => {
+    setActionLoading('rename')
+    await renameBand(bandName)
+    setEditingName(false)
+    setActionLoading(null)
+  }
+
+  const handleDeleteBand = async () => {
+    setActionLoading('delete')
+    await deleteBand()
+    setActionLoading(null)
+    setConfirmAction(null)
+  }
+
+  const handleLeaveBand = async () => {
+    setActionLoading('leave')
+    await leaveBand()
+    setActionLoading(null)
+    setConfirmAction(null)
   }
 
   return (
@@ -140,17 +172,18 @@ export default function SettingsPage() {
                   value={bandName}
                   onChange={(e) => setBandName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') { renameBand(bandName); setEditingName(false) }
+                    if (e.key === 'Enter') { handleRenameBand() }
                     if (e.key === 'Escape') { setBandName(currentBand.name); setEditingName(false) }
                   }}
                   autoFocus
                   className="flex-1 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--accent)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 />
                 <button
-                  onClick={() => { renameBand(bandName); setEditingName(false) }}
-                  className="px-3 py-2 bg-[var(--accent)] text-white rounded-lg text-sm hover:opacity-90"
+                  onClick={handleRenameBand}
+                  disabled={actionLoading === 'rename'}
+                  className="px-3 py-2 bg-[var(--accent)] text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4" />
+                  {actionLoading === 'rename' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={() => { setBandName(currentBand.name); setEditingName(false) }}
@@ -207,9 +240,10 @@ export default function SettingsPage() {
             />
             <button
               onClick={handleAddLocation}
-              className="px-3 py-2 bg-[var(--accent)] text-white rounded-lg text-sm hover:opacity-90 transition-opacity flex items-center gap-1"
+              disabled={actionLoading === 'addLocation'}
+              className="px-3 py-2 bg-[var(--accent)] text-white rounded-lg text-sm hover:opacity-90 transition-opacity flex items-center gap-1 disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" />
+              {actionLoading === 'addLocation' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Ekle
             </button>
           </div>
@@ -222,10 +256,11 @@ export default function SettingsPage() {
                   <span className="text-[var(--text-primary)] text-sm">{loc}</span>
                 </div>
                 <button
-                  onClick={() => removeLocation(loc)}
-                  className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                  onClick={() => handleRemoveLocation(loc)}
+                  disabled={actionLoading === `removeLocation-${loc}`}
+                  className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
                 >
-                  <X className="w-4 h-4" />
+                  {actionLoading === `removeLocation-${loc}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                 </button>
               </div>
             ))}
@@ -291,7 +326,7 @@ export default function SettingsPage() {
                 disabled={createLoading || !newGroupName.trim()}
                 className="px-4 py-2 bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-opacity"
               >
-                {createLoading ? '...' : 'Oluştur'}
+                {createLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Oluştur'}
               </button>
             </div>
           )}
@@ -315,7 +350,7 @@ export default function SettingsPage() {
                   disabled={joinLoading}
                   className="px-4 py-2 bg-[var(--accent)] hover:opacity-90 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-opacity"
                 >
-                  {joinLoading ? '...' : 'Katıl'}
+                  {joinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Katıl'}
                 </button>
               </div>
             </div>
@@ -332,9 +367,10 @@ export default function SettingsPage() {
               {canLeave && (
                 <button
                   onClick={() => setConfirmAction('leave')}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#d2992211] hover:bg-[#d2992222] text-[var(--warning)] rounded-xl border border-[#d2992233] transition-colors"
+                  disabled={actionLoading === 'leave'}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#d2992211] hover:bg-[#d2992222] text-[var(--warning)] rounded-xl border border-[#d2992233] transition-colors disabled:opacity-50"
                 >
-                  <DoorOpen className="w-4 h-4" />
+                  {actionLoading === 'leave' ? <Loader2 className="w-4 h-4 animate-spin" /> : <DoorOpen className="w-4 h-4" />}
                   {isOwner ? 'Gruptan Ayrıl (sahiplik devredilecek)' : 'Gruptan Ayrıl'}
                 </button>
               )}
@@ -342,9 +378,10 @@ export default function SettingsPage() {
               {isOwner && (
                 <button
                   onClick={() => setConfirmAction('delete')}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#f8514911] hover:bg-[#f8514922] text-[var(--danger)] rounded-xl border border-[#f8514933] transition-colors"
+                  disabled={actionLoading === 'delete'}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#f8514911] hover:bg-[#f8514922] text-[var(--danger)] rounded-xl border border-[#f8514933] transition-colors disabled:opacity-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {actionLoading === 'delete' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   Grubu Sil
                 </button>
               )}
@@ -355,12 +392,15 @@ export default function SettingsPage() {
         {/* Sign out */}
         <button
           onClick={signOut}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-[#f8514911] hover:bg-[#f8514922] text-[var(--danger)] rounded-xl border border-[#f8514933] transition-colors"
+          disabled={signingOut}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-[#f8514911] hover:bg-[#f8514922] text-[var(--danger)] rounded-xl border border-[#f8514933] transition-colors disabled:opacity-50"
         >
-          <LogOut className="w-4 h-4" />
-          Çıkış Yap
+          {signingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+          {signingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
         </button>
       </div>
+
+      {signingOut && <FullScreenLoader message="Çıkış yapılıyor..." />}
 
       <ConfirmDialog
         open={confirmAction === 'leave'}
@@ -371,7 +411,7 @@ export default function SettingsPage() {
         }
         confirmLabel="Ayrıl"
         variant="warning"
-        onConfirm={() => { leaveBand(); setConfirmAction(null) }}
+        onConfirm={handleLeaveBand}
         onCancel={() => setConfirmAction(null)}
       />
 
@@ -381,7 +421,7 @@ export default function SettingsPage() {
         message={`"${currentBand?.name}" grubu ve tüm içeriği kalıcı olarak silinecek. Bu işlem geri alınamaz.`}
         confirmLabel="Grubu Sil"
         variant="danger"
-        onConfirm={() => { deleteBand(); setConfirmAction(null) }}
+        onConfirm={handleDeleteBand}
         onCancel={() => setConfirmAction(null)}
       />
     </AppShell>

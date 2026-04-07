@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
+  signingOut: boolean
   signOut: () => Promise<void>
 }
 
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  signingOut: false,
   signOut: async () => {},
 })
 
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -66,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = async () => {
+    setSigningOut(true)
     // Önce cookie'leri temizle
     document.cookie.split(';').forEach((c) => {
       const name = c.trim().split('=')[0]
@@ -90,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signingOut, signOut }}>
       {children}
     </AuthContext.Provider>
   )

@@ -37,6 +37,8 @@ export default function SongsPage() {
   const [artist, setArtist] = useState('')
   const [detecting, setDetecting] = useState(false)
   const [detected, setDetected] = useState(false)
+  const [addLoading, setAddLoading] = useState(false)
+  const [ratingLoading, setRatingLoading] = useState<string | null>(null)
 
   const handleDetect = async () => {
     if (!spotifyUrl && !youtubeUrl) return
@@ -81,6 +83,7 @@ export default function SongsPage() {
     if (!title || !artist) return
     if (!spotifyUrl && !youtubeUrl) return
 
+    setAddLoading(true)
     await addSong({
       title,
       artist: artist || null,
@@ -93,6 +96,13 @@ export default function SongsPage() {
     setArtist('')
     setDetected(false)
     setShowAddForm(false)
+    setAddLoading(false)
+  }
+
+  const handleRate = async (songId: string, value: number) => {
+    setRatingLoading(songId)
+    await rateSong(songId, value)
+    setRatingLoading(null)
   }
 
   const memberCount = members.length
@@ -203,9 +213,10 @@ export default function SongsPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-lg text-sm transition-opacity"
+                  disabled={addLoading}
+                  className="w-full py-2.5 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-lg text-sm transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Öner
+                  {addLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Ekleniyor...</> : 'Öner'}
                 </button>
               </>
             )}
@@ -290,7 +301,7 @@ export default function SongsPage() {
                   <SongCard
                     song={song}
                     userVote={votes.find((v) => v.song_id === song.id && v.user_id === userId) || null}
-                    onRate={(value) => rateSong(song.id, value)}
+                    onRate={(value) => handleRate(song.id, value)}
                     onAddToRepertoire={isReady ? () => { moveToRepertoire(song.id); addSongToRehearsal(song.id) } : undefined}
                     onRemove={() => removeSong(song.id)}
                     rank={tab === 'ready' ? i + 1 : undefined}

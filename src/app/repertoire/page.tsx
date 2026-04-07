@@ -6,7 +6,7 @@ import { useSongs } from '@/contexts/SongsContext'
 import { useBand } from '@/contexts/BandContext'
 import { useRehearsal } from '@/contexts/RehearsalContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { ListMusic, Search, Play, ChevronUp, ChevronDown, Trash2, AlertCircle, Check, Star, Plus, X, Users } from 'lucide-react'
+import { ListMusic, Search, Play, ChevronUp, ChevronDown, Trash2, AlertCircle, Check, Star, Plus, X, Users, Loader2 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 
 function capitalizeWords(str: string): string {
@@ -66,6 +66,7 @@ export default function RepertoirePage() {
   const [addArtist, setAddArtist] = useState('')
   const [addSpotify, setAddSpotify] = useState('')
   const [addYoutube, setAddYoutube] = useState('')
+  const [addLoading, setAddLoading] = useState(false)
 
   // Bu hafta eklenenleri en üste koy, geri kalanı mevcut sırada bırak
   const sortedRepertoire = [
@@ -91,16 +92,18 @@ export default function RepertoirePage() {
     setNewDeficiency('')
   }
 
-  const handleDirectAdd = (e: React.FormEvent) => {
+  const handleDirectAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!addTitle.trim() || !addArtist.trim()) return
     if (!addSpotify && !addYoutube) return
-    addDirectToRepertoire(addTitle.trim(), addArtist.trim(), addSpotify || undefined, addYoutube || undefined)
+    setAddLoading(true)
+    await addDirectToRepertoire(addTitle.trim(), addArtist.trim(), addSpotify || undefined, addYoutube || undefined)
     setAddTitle('')
     setAddArtist('')
     setAddSpotify('')
     setAddYoutube('')
     setShowAddForm(false)
+    setAddLoading(false)
   }
 
   return (
@@ -162,9 +165,10 @@ export default function RepertoirePage() {
             )}
             <button
               type="submit"
-              className="w-full py-2 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-lg text-sm transition-opacity"
+              disabled={addLoading}
+              className="w-full py-2 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-lg text-sm transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Repertuvara Ekle
+              {addLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Ekleniyor...</> : 'Repertuvara Ekle'}
             </button>
           </form>
         )}
