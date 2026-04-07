@@ -283,15 +283,7 @@ export default function RepertoirePage() {
                         </div>
                       ) : (
                         <>
-                          <div className="flex items-center gap-1">
-                            <h3 className="text-[var(--text-primary)] font-semibold text-sm truncate">{song.title}</h3>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setEditingSong(song.id); setEditTitle(song.title); setEditArtist(song.artist || '') }}
-                              className="text-[var(--text-muted)] hover:text-[var(--accent)] flex-shrink-0"
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </button>
-                          </div>
+                          <h3 className="text-[var(--text-primary)] font-semibold text-sm truncate">{song.title}</h3>
                           {song.artist && (
                             <p className="text-[var(--text-muted)] text-xs truncate">{song.artist}</p>
                           )}
@@ -336,6 +328,17 @@ export default function RepertoirePage() {
                   {/* Expanded: puanlama + eksikler */}
                   {isExpanded && (
                     <div className="border-t border-[var(--border)] p-4 bg-[var(--bg-secondary)] space-y-4">
+                      {/* Düzenle butonu */}
+                      {editingSong !== song.id && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingSong(song.id); setEditTitle(song.title); setEditArtist(song.artist || '') }}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:bg-[var(--bg-card)] hover:text-[var(--accent)] transition-colors w-full"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          <span>Düzenle</span>
+                        </button>
+                      )}
+
                       {/* Puanlama */}
                       <div>
                         <h4 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
