@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { SongWithVotes, Vote } from '@/lib/types'
 import ConfirmDialog from './ConfirmDialog'
 import {
@@ -95,6 +95,12 @@ export default function SongCard({
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(song.title)
   const [editArtist, setEditArtist] = useState(song.artist || '')
+  const [localRating, setLocalRating] = useState<number | null>(null)
+
+  // userVote güncellenince local state'i sıfırla
+  useEffect(() => {
+    if (userVote) setLocalRating(null)
+  }, [userVote?.value])
 
   const addDeficiency = () => {
     if (!newDeficiency.trim() || !onAddDeficiency) return
@@ -213,8 +219,8 @@ export default function SongCard({
         {showVoting && (
           <div className="mt-3 pt-3 border-t border-[var(--border)]">
             <ScoreBar
-              value={userVote?.value ?? 0}
-              onChange={(v) => onRate?.(v)}
+              value={localRating ?? userVote?.value ?? 0}
+              onChange={(v) => { setLocalRating(v); onRate?.(v) }}
             />
             {voteDetails.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
