@@ -9,12 +9,9 @@ import { useRehearsal } from '@/contexts/RehearsalContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBand } from '@/contexts/BandContext'
 import type { SongWithVotes } from '@/lib/types'
-import { Plus, Search, X, Edit3, Loader2, AlertCircle, CheckCircle, Clock, Users } from 'lucide-react'
+import { Plus, Search, X, Loader2, AlertCircle, CheckCircle, Clock, Users } from 'lucide-react'
 import { useToast } from '@/components/Toast'
-
-function capitalizeWords(str: string): string {
-  return str.replace(/(^|\s)\S/g, (char) => char.toUpperCase())
-}
+import SongAddForm from '@/components/SongAddForm'
 
 type TabType = 'unrated' | 'pending' | 'ready'
 
@@ -32,80 +29,19 @@ export default function SongsPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [tab, setTab] = useState<TabType>('unrated')
 
-  // Add form
-  const [spotifyUrl, setSpotifyUrl] = useState('')
-  const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [title, setTitle] = useState('')
-  const [artist, setArtist] = useState('')
-  const [detecting, setDetecting] = useState(false)
-  const [detected, setDetected] = useState(false)
-  const [addLoading, setAddLoading] = useState(false)
-  const [ratingLoading, setRatingLoading] = useState<string | null>(null)
-
-  const handleDetect = async () => {
-    if (!spotifyUrl && !youtubeUrl) return
-    setDetecting(true)
-    await new Promise((r) => setTimeout(r, 800))
-    setTitle('Detected Song')
-    setArtist('Detected Artist')
-    setDetecting(false)
-    setDetected(true)
-  }
-
-  const handleSpotifyChange = (url: string) => {
-    setSpotifyUrl(url)
-    setDetected(false)
-    if (url && (url.includes('spotify.com') || url.includes('spotify:'))) {
-      setDetecting(true)
-      setTimeout(() => {
-        setTitle('Detected Song')
-        setArtist('Detected Artist')
-        setDetecting(false)
-        setDetected(true)
-      }, 800)
-    }
-  }
-
-  const handleYoutubeChange = (url: string) => {
-    setYoutubeUrl(url)
-    setDetected(false)
-    if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
-      setDetecting(true)
-      setTimeout(() => {
-        setTitle('Detected Song')
-        setArtist('Detected Artist')
-        setDetecting(false)
-        setDetected(true)
-      }, 800)
-    }
-  }
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title || !artist) return
-    if (!spotifyUrl && !youtubeUrl) return
-
-    setAddLoading(true)
+  const handleAddSong = async (data: { title: string; artist: string; spotifyUrl: string; youtubeUrl: string }) => {
     await addSong({
-      title,
-      artist: artist || null,
-      spotify_url: spotifyUrl || null,
-      youtube_url: youtubeUrl || null,
+      title: data.title,
+      artist: data.artist,
+      spotify_url: data.spotifyUrl || null,
+      youtube_url: data.youtubeUrl || null,
     })
-    setSpotifyUrl('')
-    setYoutubeUrl('')
-    setTitle('')
-    setArtist('')
-    setDetected(false)
     setShowAddForm(false)
-    setAddLoading(false)
     toast('Şarkı önerildi!')
   }
 
   const handleRate = async (songId: string, value: number) => {
-    setRatingLoading(songId)
     await rateSong(songId, value)
-    setRatingLoading(null)
     toast('Puanınız kaydedildi!')
   }
 
@@ -132,8 +68,6 @@ export default function SongsPage() {
       return s.title.toLowerCase().includes(q) || (s.artist?.toLowerCase().includes(q) ?? false)
     })
 
-  const hasLink = !!(spotifyUrl || youtubeUrl)
-
   const tabs: { key: TabType; label: string; icon: any; count: number; color: string }[] = [
     { key: 'unrated', label: 'Oy Bekliyor', icon: AlertCircle, count: unratedSongs.length, color: 'var(--danger)' },
     { key: 'pending', label: 'Beklemede', icon: Clock, count: pendingSongs.length, color: 'var(--warning)' },
@@ -155,85 +89,7 @@ export default function SongsPage() {
         </div>
 
         {showAddForm && (
-          <form onSubmit={handleAdd} className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] p-4 space-y-3">
-            <div>
-              <label className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#1db954]" />
-                Spotify Linki
-              </label>
-              <input
-                type="url"
-                value={spotifyUrl}
-                onChange={(e) => handleSpotifyChange(e.target.value)}
-                className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#1db954] focus:border-transparent"
-                placeholder="https://open.spotify.com/track/..."
-              />
-            </div>
-            <div>
-              <label className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#ff4444]" />
-                YouTube Linki
-              </label>
-              <input
-                type="url"
-                value={youtubeUrl}
-                onChange={(e) => handleYoutubeChange(e.target.value)}
-                className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#ff4444] focus:border-transparent"
-                placeholder="https://youtube.com/watch?v=..."
-              />
-            </div>
-            {!hasLink && (
-              <p className="text-[var(--text-muted)] text-xs">En az bir link girin (ikisi de olabilir)</p>
-            )}
-            {detecting && (
-              <div className="flex items-center gap-2 text-[var(--text-secondary)] text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Şarkı bilgileri alınıyor...
-              </div>
-            )}
-            {detected && !detecting && (
-              <>
-                <div className="bg-[var(--bg-secondary)] rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--text-muted)]">Otomatik algılandı — düzenleme yapabilirsiniz</span>
-                    <Edit3 className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                  </div>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(capitalizeWords(e.target.value))}
-                    className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                    placeholder="Şarkı adı *"
-                    required
-                  />
-                  <input
-                    type="text"
-                    value={artist}
-                    onChange={(e) => setArtist(capitalizeWords(e.target.value))}
-                    className="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                    placeholder="Sanatçı *"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={addLoading}
-                  className="w-full py-2.5 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-lg text-sm transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {addLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Ekleniyor...</> : 'Öner'}
-                </button>
-              </>
-            )}
-            {hasLink && !detected && !detecting && (
-              <button
-                type="button"
-                onClick={handleDetect}
-                className="w-full py-2.5 bg-[var(--bg-secondary)] hover:bg-[var(--border)] text-[var(--text-primary)] font-medium rounded-lg text-sm transition-colors border border-[var(--border)]"
-              >
-                Şarkı Bilgilerini Al
-              </button>
-            )}
-          </form>
+          <SongAddForm onAdd={handleAddSong} submitLabel="Öner" />
         )}
 
         {/* Tabs */}

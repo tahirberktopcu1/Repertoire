@@ -8,6 +8,7 @@ import { useRehearsal } from '@/contexts/RehearsalContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { ListMusic, Search, Play, ChevronUp, ChevronDown, Trash2, AlertCircle, Check, Star, Plus, X, Users, Loader2 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import SongAddForm from '@/components/SongAddForm'
 import { useToast } from '@/components/Toast'
 
 function capitalizeWords(str: string): string {
@@ -61,14 +62,8 @@ export default function RepertoirePage() {
   const [newDeficiency, setNewDeficiency] = useState('')
   const [assignedTo, setAssignedTo] = useState('group')
 
-  // Direkt ekleme formu
   const [showAddForm, setShowAddForm] = useState(false)
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'resolve'; songId: string; defId?: string; songTitle: string } | null>(null)
-  const [addTitle, setAddTitle] = useState('')
-  const [addArtist, setAddArtist] = useState('')
-  const [addSpotify, setAddSpotify] = useState('')
-  const [addYoutube, setAddYoutube] = useState('')
-  const [addLoading, setAddLoading] = useState(false)
 
   // Bu hafta eklenenleri en üste koy, geri kalanı mevcut sırada bırak
   const sortedRepertoire = [
@@ -95,18 +90,9 @@ export default function RepertoirePage() {
     toast('Eksik eklendi!')
   }
 
-  const handleDirectAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!addTitle.trim() || !addArtist.trim()) return
-    if (!addSpotify && !addYoutube) return
-    setAddLoading(true)
-    await addDirectToRepertoire(addTitle.trim(), addArtist.trim(), addSpotify || undefined, addYoutube || undefined)
-    setAddTitle('')
-    setAddArtist('')
-    setAddSpotify('')
-    setAddYoutube('')
+  const handleDirectAdd = async (data: { title: string; artist: string; spotifyUrl: string; youtubeUrl: string }) => {
+    await addDirectToRepertoire(data.title, data.artist, data.spotifyUrl || undefined, data.youtubeUrl || undefined)
     setShowAddForm(false)
-    setAddLoading(false)
     toast('Parça eklendi!')
   }
 
@@ -130,51 +116,8 @@ export default function RepertoirePage() {
           </div>
         </div>
 
-        {/* Direkt parça ekleme formu */}
         {showAddForm && (
-          <form onSubmit={handleDirectAdd} className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] p-4 space-y-2.5">
-            <p className="text-xs text-[var(--text-muted)]">Mevcut parçayı direkt repertuvara ekle</p>
-            <input
-              type="text"
-              value={addTitle}
-              onChange={(e) => setAddTitle(capitalizeWords(e.target.value))}
-              className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              placeholder="Şarkı adı *"
-              required
-            />
-            <input
-              type="text"
-              value={addArtist}
-              onChange={(e) => setAddArtist(capitalizeWords(e.target.value))}
-              className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              placeholder="Sanatçı *"
-              required
-            />
-            <input
-              type="url"
-              value={addSpotify}
-              onChange={(e) => setAddSpotify(e.target.value)}
-              className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#1db954]"
-              placeholder="Spotify linki"
-            />
-            <input
-              type="url"
-              value={addYoutube}
-              onChange={(e) => setAddYoutube(e.target.value)}
-              className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[#ff4444]"
-              placeholder="YouTube linki"
-            />
-            {!addSpotify && !addYoutube && (
-              <p className="text-[var(--text-muted)] text-xs">En az bir link girin (Spotify veya YouTube)</p>
-            )}
-            <button
-              type="submit"
-              disabled={addLoading}
-              className="w-full py-2 bg-[var(--accent)] hover:opacity-90 text-white font-medium rounded-lg text-sm transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {addLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Ekleniyor...</> : 'Repertuvara Ekle'}
-            </button>
-          </form>
+          <SongAddForm onAdd={handleDirectAdd} submitLabel="Repertuvara Ekle" />
         )}
 
         {repertoire.length > 0 && (
