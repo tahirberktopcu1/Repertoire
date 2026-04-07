@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Repertoire</string>
+    <string name="title_activity_main">Repertoire</string>
+    <string name="package_name">com.repertoire.app</string>
+    <string name="custom_url_scheme">com.repertoire.app</string>
+</resources>
