@@ -55,9 +55,11 @@ export default function SettingsPage() {
     if (bandErr) { setCreateLoading(false); alert('Grup oluşturulamadı: ' + bandErr.message); return }
 
     if (band) {
-      // band_members'a da ekle
       await supabase.from('band_members').insert({ band_id: band.id })
-      await refreshBands()
+      // Band context'i güncelle — refreshBands user'a bağlı, user null olabilir
+      // Direkt window.location ile full reload yap
+      window.location.href = '/settings'
+      return
     }
     setNewGroupName('')
     setShowCreateForm(false)
@@ -90,10 +92,7 @@ export default function SettingsPage() {
       setJoinLoading(false)
       return
     }
-    await refreshBands()
-    setJoinCode('')
-    setShowJoinForm(false)
-    setJoinLoading(false)
+    window.location.href = '/settings'
   }
 
   const copyToClipboard = (text: string, key: string) => {

@@ -30,35 +30,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createClient()
     let mounted = true
+    let resolved = false
 
-    const setUserAndProfile = async (u: User | null) => {
-      if (!mounted) return
+    const resolve = async (u: User | null) => {
+      if (!mounted || resolved) return
+      resolved = true
       setUser(u)
       if (u) {
         const { data } = await supabase.from('profiles').select('*').eq('id', u.id).single()
         if (mounted) setProfile(data)
-      } else {
-        setProfile(null)
       }
       if (mounted) setLoading(false)
     }
 
-    // 1. getUser ile dene (en güvenilir, server'a sorar)
+    // Yol 1: getUser (sunucuya sorar, cookie'lerden okur)
     supabase.auth.getUser().then(({ data }: any) => {
-      if (data?.user && mounted) setUserAndProfile(data.user)
+      if (data?.user) resolve(data.user)
     }).catch(() => {})
 
-    // 2. onAuthStateChange dinle
+    // Yol 2: onAuthStateChange (event bazlı)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: any, session: any) => {
         if (!mounted) return
-        await setUserAndProfile(session?.user ?? null)
+        const u = session?.user ?? null
+        if (u) {
+          resolve(u)
+        } else if (resolved) {
+          // Kullanıcı çıkış yaptı
+          setUser(null)
+          setProfile(null)
+          setLoading(false)
+        }
       }
     )
 
-    // 3. Fallback: 3 saniye içinde hiçbir şey olmazsa loading kapat
+    // Yol 3: Fallback timeout
     const timeout = setTimeout(() => {
-      if (mounted && loading) setLoading(false)
+      if (mounted && !resolved) {
+        resolved = true
+        setLoading(false)
+      }
     }, 3000)
 
     return () => {
@@ -70,17 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setSigningOut(true)
-    // Önce cookie'leri temizle
     document.cookie.split(';').forEach((c) => {
       const name = c.trim().split('=')[0]
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`
     })
-    // localStorage temizle
     Object.keys(localStorage).forEach((key) => {
       if (key.includes('supabase') || key.includes('sb-')) localStorage.removeItem(key)
     })
-    // Supabase signOut dene (asılı kalırsa sorun değil)
     try {
       const supabase = createClient()
       await Promise.race([
