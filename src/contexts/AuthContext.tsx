@@ -41,8 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // 1. getUser ile dene (en güvenilir, server'a sorar)
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (u && mounted) setUserAndProfile(u)
+    supabase.auth.getUser().then(({ data }: any) => {
+      if (data?.user && mounted) setUserAndProfile(data.user)
     }).catch(() => {})
 
     // 2. onAuthStateChange dinle
