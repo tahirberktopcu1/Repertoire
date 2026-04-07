@@ -63,7 +63,7 @@ export default function RepertoirePage() {
   const [assignedTo, setAssignedTo] = useState('group')
 
   const [showAddForm, setShowAddForm] = useState(false)
-  const [sortBy, setSortBy] = useState<'manual' | 'score-asc' | 'score-desc' | 'date-asc' | 'date-desc'>('manual')
+  const [sortBy, setSortBy] = useState<'score-asc' | 'score-desc' | 'date-asc' | 'date-desc'>('score-asc')
   const [editingSong, setEditingSong] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editArtist, setEditArtist] = useState('')
@@ -86,15 +86,13 @@ export default function RepertoirePage() {
     ...repertoire.filter((s) => !showThisWeek || !thisWeekIds.has(s.id)),
   ]
 
-  const sortedRepertoire = sortBy === 'manual'
-    ? manualSorted
-    : [...manualSorted].sort((a, b) => {
-        if (sortBy === 'score-asc') return getFinalScore(a) - getFinalScore(b)
-        if (sortBy === 'score-desc') return getFinalScore(b) - getFinalScore(a)
-        if (sortBy === 'date-asc') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        if (sortBy === 'date-desc') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        return 0
-      })
+  const sortedRepertoire = [...manualSorted].sort((a, b) => {
+    if (sortBy === 'score-asc') return getFinalScore(a) - getFinalScore(b)
+    if (sortBy === 'score-desc') return getFinalScore(b) - getFinalScore(a)
+    if (sortBy === 'date-asc') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    if (sortBy === 'date-desc') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    return 0
+  })
 
   const filteredSongs = sortedRepertoire.filter((s) => {
     if (!search) return true
@@ -164,9 +162,8 @@ export default function RepertoirePage() {
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                 className="pl-8 pr-2 py-2.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none cursor-pointer"
               >
-                <option value="manual">Manuel</option>
-                <option value="score-desc">Puan ↓</option>
                 <option value="score-asc">Puan ↑</option>
+                <option value="score-desc">Puan ↓</option>
                 <option value="date-desc">Tarih ↓</option>
                 <option value="date-asc">Tarih ↑</option>
               </select>
@@ -221,7 +218,7 @@ export default function RepertoirePage() {
                     className="p-3 flex items-center gap-3"
                     onClick={() => setExpandedId(isExpanded ? null : song.id)}
                   >
-                    {sortBy === 'manual' && !search && !isTop2 && (
+                    {false && !search && !isTop2 && (
                       <div className="flex flex-col gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => reorderRepertoire(song.id, 'up')}

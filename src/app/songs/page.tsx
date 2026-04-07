@@ -194,7 +194,7 @@ export default function SongsPage() {
               )}
               {tab === 'ready' && (
                 <>
-                  <AlertCircle className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                  <AlertCircle className="w-12 h-12 text-[var(--orange)] mx-auto mb-3" />
                   <p className="text-[var(--text-muted)]">Henüz herkesin oyladığı şarkı yok</p>
                   <p className="text-[var(--text-muted)] text-sm mt-1">Tüm üyeler oylarını kullanınca şarkılar burada görünür</p>
                 </>

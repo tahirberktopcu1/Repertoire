@@ -155,14 +155,7 @@ export default function SongCard({
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-1">
-                  <h3 className="text-[var(--text-primary)] font-semibold truncate">{song.title}</h3>
-                  {onEdit && (
-                    <button onClick={(e) => { e.stopPropagation(); setEditing(true) }} className="text-[var(--text-muted)] hover:text-[var(--accent)] flex-shrink-0">
-                      <Pencil className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
+                <h3 className="text-[var(--text-primary)] font-semibold truncate">{song.title}</h3>
                 {song.artist && (
                   <p className="text-[var(--text-secondary)] text-sm truncate">{song.artist}</p>
                 )}
@@ -244,6 +237,17 @@ export default function SongCard({
 
         {/* Actions row */}
         <div className="flex items-center gap-2 mt-3">
+          {onEdit && (
+            <button
+              onClick={() => { setEditTitle(song.title); setEditArtist(song.artist || ''); setEditing(true) }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--accent)] transition-colors"
+              title="Düzenle"
+            >
+              <Pencil className="w-4 h-4" />
+              <span className="text-xs">Düzenle</span>
+            </button>
+          )}
+
           {onRemove && (
             <button
               onClick={() => setConfirmDelete(true)}
