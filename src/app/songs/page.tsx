@@ -92,6 +92,18 @@ export default function SongsPage() {
           <SongAddForm onAdd={handleAddSong} submitLabel="Öner" />
         )}
 
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            placeholder="Şarkı ara..."
+          />
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-1 bg-[var(--bg-secondary)] rounded-lg p-1">
           {tabs.map((t) => {
@@ -116,18 +128,6 @@ export default function SongsPage() {
               </button>
             )
           })}
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-            placeholder="Şarkı ara..."
-          />
         </div>
 
         {/* Tab description */}
