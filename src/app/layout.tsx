@@ -6,6 +6,7 @@ import { BandProvider } from '@/contexts/BandContext'
 import { LocationsProvider } from '@/contexts/LocationsContext'
 import { SongsProvider } from '@/contexts/SongsContext'
 import { RehearsalProvider } from '@/contexts/RehearsalContext'
+import { ToastProvider } from '@/components/Toast'
 
 const geist = Geist({
   variable: '--font-geist-sans',
@@ -47,7 +48,9 @@ export default function RootLayout({
             <LocationsProvider>
               <SongsProvider>
                 <RehearsalProvider>
-                  {children}
+                  <ToastProvider>
+                    {children}
+                  </ToastProvider>
                 </RehearsalProvider>
               </SongsProvider>
             </LocationsProvider>

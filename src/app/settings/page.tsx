@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import FullScreenLoader from '@/components/FullScreenLoader'
+import { useToast } from '@/components/Toast'
 
 export default function SettingsPage() {
   const { user, profile, signOut, signingOut } = useAuth()
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const [joinError, setJoinError] = useState('')
   const [joinLoading, setJoinLoading] = useState(false)
   const supabase = createClient()
+  const { toast } = useToast()
   const [newLocation, setNewLocation] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -52,10 +54,11 @@ export default function SettingsPage() {
       .insert({ name: newGroupName.trim() })
       .select().single()
 
-    if (bandErr) { setCreateLoading(false); alert('Grup oluşturulamadı: ' + bandErr.message); return }
+    if (bandErr) { setCreateLoading(false); toast('Grup oluşturulamadı', 'error'); return }
 
     if (band) {
       await supabase.from('band_members').insert({ band_id: band.id })
+      toast('Grup oluşturuldu!')
       // Band context'i güncelle — refreshBands user'a bağlı, user null olabilir
       // Direkt window.location ile full reload yap
       window.location.href = '/settings'
@@ -79,6 +82,7 @@ export default function SettingsPage() {
 
     if (searchErr || !bands || bands.length === 0) {
       setJoinError('Geçersiz davet kodu')
+      toast('Geçersiz davet kodu', 'error')
       setJoinLoading(false)
       return
     }
@@ -89,15 +93,18 @@ export default function SettingsPage() {
     const { error: insertErr } = await supabase.from('band_members').insert({ band_id: band.id })
     if (insertErr) {
       setJoinError('Katılma hatası: ' + insertErr.message)
+      toast('Katılma hatası', 'error')
       setJoinLoading(false)
       return
     }
+    toast('Gruba katıldınız!')
     window.location.href = '/settings'
   }
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
     setCopied(key)
+    toast('Kopyalandı!')
     setTimeout(() => setCopied(null), 2000)
   }
 
@@ -107,12 +114,14 @@ export default function SettingsPage() {
     await addLocation(newLocation.trim())
     setNewLocation('')
     setActionLoading(null)
+    toast('Konum eklendi!')
   }
 
   const handleRemoveLocation = async (loc: string) => {
     setActionLoading(`removeLocation-${loc}`)
     await removeLocation(loc)
     setActionLoading(null)
+    toast('Konum silindi!')
   }
 
   const handleRenameBand = async () => {
@@ -120,6 +129,7 @@ export default function SettingsPage() {
     await renameBand(bandName)
     setEditingName(false)
     setActionLoading(null)
+    toast('Grup adı güncellendi!')
   }
 
   const handleDeleteBand = async () => {
@@ -127,6 +137,7 @@ export default function SettingsPage() {
     await deleteBand()
     setActionLoading(null)
     setConfirmAction(null)
+    toast('Grup silindi!')
   }
 
   const handleLeaveBand = async () => {
@@ -134,6 +145,7 @@ export default function SettingsPage() {
     await leaveBand()
     setActionLoading(null)
     setConfirmAction(null)
+    toast('Gruptan ayrıldınız!')
   }
 
   return (

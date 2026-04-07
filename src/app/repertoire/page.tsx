@@ -8,6 +8,7 @@ import { useRehearsal } from '@/contexts/RehearsalContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { ListMusic, Search, Play, ChevronUp, ChevronDown, Trash2, AlertCircle, Check, Star, Plus, X, Users, Loader2 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 
 function capitalizeWords(str: string): string {
   return str.replace(/(^|\s)\S/g, (char) => char.toUpperCase())
@@ -48,6 +49,7 @@ export default function RepertoirePage() {
   const { members } = useBand()
   const { repertoire, deficiencies, removeFromRepertoire, reorderRepertoire, addDeficiency, resolveDeficiency, addDirectToRepertoire, rateRepertoireSong, repertoireVotes } = useSongs()
   const { activeRehearsal, isRehearsalOver, pendingSongIds } = useRehearsal()
+  const { toast } = useToast()
   const userId = user?.id || ''
   const memberNames: Record<string, string> = {}
   members.forEach((m) => { memberNames[m.user_id] = (m.profiles as any)?.full_name || 'Bilinmeyen' })
@@ -90,6 +92,7 @@ export default function RepertoirePage() {
     if (!newDeficiency.trim()) return
     addDeficiency(songId, newDeficiency.trim(), assignedTo, getAssignedName(assignedTo))
     setNewDeficiency('')
+    toast('Eksik eklendi!')
   }
 
   const handleDirectAdd = async (e: React.FormEvent) => {
@@ -104,6 +107,7 @@ export default function RepertoirePage() {
     setAddYoutube('')
     setShowAddForm(false)
     setAddLoading(false)
+    toast('Parça eklendi!')
   }
 
   return (
@@ -315,7 +319,7 @@ export default function RepertoirePage() {
                         </h4>
                         <ScoreBar
                           value={userRepVote?.value ?? 0}
-                          onChange={(v) => rateRepertoireSong(song.id, v)}
+                          onChange={(v) => { rateRepertoireSong(song.id, v); toast('Puan kaydedildi!') }}
                         />
                         {songRepVotes.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -442,8 +446,10 @@ export default function RepertoirePage() {
         onConfirm={() => {
           if (confirmAction?.type === 'delete') {
             removeFromRepertoire(confirmAction.songId)
+            toast('Parça çıkarıldı!')
           } else if (confirmAction?.type === 'resolve' && confirmAction.defId) {
             resolveDeficiency(confirmAction.songId, confirmAction.defId)
+            toast('Eksik tamamlandı!')
           }
           setConfirmAction(null)
         }}

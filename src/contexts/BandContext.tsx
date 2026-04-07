@@ -97,7 +97,7 @@ export function BandProvider({ children }: { children: ReactNode }) {
         refreshMembers()
         refreshBands()
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bands', filter: `id=eq.${currentBand.id}` }, (payload) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bands', filter: `id=eq.${currentBand.id}` }, (payload: any) => {
         if (payload.eventType === 'DELETE') {
           // Grup silindi — diğer kullanıcıları bilgilendir
           window.location.href = '/dashboard'

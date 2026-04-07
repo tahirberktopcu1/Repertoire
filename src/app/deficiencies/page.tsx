@@ -7,6 +7,7 @@ import { useBand } from '@/contexts/BandContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { AlertCircle, Check, Music, Users, User, UserCircle } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 
 type FilterType = 'mine' | 'group' | 'others' | 'all'
 
@@ -14,6 +15,7 @@ export default function DeficienciesPage() {
   const { user } = useAuth()
   const { members } = useBand()
   const { repertoire, allDeficiencies, resolveDeficiency } = useSongs()
+  const { toast } = useToast()
   const [filter, setFilter] = useState<FilterType>('mine')
   const [confirmResolve, setConfirmResolve] = useState<{ songId: string; defId: string; content: string } | null>(null)
 
@@ -150,7 +152,10 @@ export default function DeficienciesPage() {
         confirmLabel="Tamamlandı"
         variant="warning"
         onConfirm={() => {
-          if (confirmResolve) resolveDeficiency(confirmResolve.songId, confirmResolve.defId)
+          if (confirmResolve) {
+            resolveDeficiency(confirmResolve.songId, confirmResolve.defId)
+            toast('Eksik tamamlandı!')
+          }
           setConfirmResolve(null)
         }}
         onCancel={() => setConfirmResolve(null)}

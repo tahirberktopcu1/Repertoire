@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useBand } from '@/contexts/BandContext'
 import type { SongWithVotes } from '@/lib/types'
 import { Plus, Search, X, Edit3, Loader2, AlertCircle, CheckCircle, Clock, Users } from 'lucide-react'
+import { useToast } from '@/components/Toast'
 
 function capitalizeWords(str: string): string {
   return str.replace(/(^|\s)\S/g, (char) => char.toUpperCase())
@@ -22,6 +23,7 @@ export default function SongsPage() {
   const { members } = useBand()
   const { songs, votes, addSong, removeSong, moveToRepertoire, rateSong } = useSongs()
   const { addSongToRehearsal } = useRehearsal()
+  const { toast } = useToast()
   const userId = user?.id || ''
 
   const memberNames: Record<string, string> = {}
@@ -97,12 +99,14 @@ export default function SongsPage() {
     setDetected(false)
     setShowAddForm(false)
     setAddLoading(false)
+    toast('Şarkı önerildi!')
   }
 
   const handleRate = async (songId: string, value: number) => {
     setRatingLoading(songId)
     await rateSong(songId, value)
     setRatingLoading(null)
+    toast('Puanınız kaydedildi!')
   }
 
   const memberCount = members.length
@@ -302,8 +306,8 @@ export default function SongsPage() {
                     song={song}
                     userVote={votes.find((v) => v.song_id === song.id && v.user_id === userId) || null}
                     onRate={(value) => handleRate(song.id, value)}
-                    onAddToRepertoire={isReady ? () => { moveToRepertoire(song.id); addSongToRehearsal(song.id) } : undefined}
-                    onRemove={() => removeSong(song.id)}
+                    onAddToRepertoire={isReady ? () => { moveToRepertoire(song.id); addSongToRehearsal(song.id); toast('Repertuvara eklendi!') } : undefined}
+                    onRemove={() => { removeSong(song.id); toast('Şarkı silindi!') }}
                     rank={tab === 'ready' ? i + 1 : undefined}
                     notRated={tab === 'unrated'}
                     voteDetails={votes

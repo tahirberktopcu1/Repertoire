@@ -11,6 +11,7 @@ import {
   Calendar, Clock, MapPin, Star, AlertCircle, Check, Plus, X, Pencil, Trash2, Music,
 } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import { useToast } from '@/components/Toast'
 import { format, parseISO, isToday } from 'date-fns'
 import { tr } from 'date-fns/locale'
 
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const { repertoire, deficiencies, resolveDeficiency } = useSongs()
   const { activeRehearsal, isRehearsalOver, pendingSongIds, createRehearsal, updateRehearsal, deleteRehearsal, clearRehearsal } = useRehearsal()
   const { locations } = useLocations()
+  const { toast } = useToast()
 
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [confirmResolve, setConfirmResolve] = useState<{ songId: string; defId: string; content: string } | null>(null)
@@ -47,6 +49,7 @@ export default function DashboardPage() {
     createRehearsal({ date, start_time: startTime, end_time: endTime, location })
     setShowCreateForm(false)
     resetForm()
+    toast('Prova oluşturuldu!')
   }
 
   const startEditing = () => {
@@ -63,6 +66,7 @@ export default function DashboardPage() {
     updateRehearsal({ date, start_time: startTime, end_time: endTime, location })
     setEditing(false)
     resetForm()
+    toast('Prova güncellendi!')
   }
 
   const resetForm = () => {
@@ -356,7 +360,10 @@ export default function DashboardPage() {
         confirmLabel="Tamamlandı"
         variant="warning"
         onConfirm={() => {
-          if (confirmResolve) resolveDeficiency(confirmResolve.songId, confirmResolve.defId)
+          if (confirmResolve) {
+            resolveDeficiency(confirmResolve.songId, confirmResolve.defId)
+            toast('Eksik tamamlandı!')
+          }
           setConfirmResolve(null)
         }}
         onCancel={() => setConfirmResolve(null)}
@@ -368,7 +375,7 @@ export default function DashboardPage() {
         message="Aktif prova silinecek."
         confirmLabel="Sil"
         variant="danger"
-        onConfirm={() => { deleteRehearsal(); setConfirmDeleteRehearsal(false) }}
+        onConfirm={() => { deleteRehearsal(); setConfirmDeleteRehearsal(false); toast('Prova silindi!') }}
         onCancel={() => setConfirmDeleteRehearsal(false)}
       />
     </AppShell>
