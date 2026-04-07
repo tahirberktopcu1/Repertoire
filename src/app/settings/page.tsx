@@ -93,10 +93,6 @@ export default function SettingsPage() {
     setJoinLoading(false)
   }
 
-  const inviteLink = typeof window !== 'undefined' && currentBand
-    ? `${window.location.origin}/invite/${currentBand.invite_code}`
-    : ''
-
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
     setCopied(key)
@@ -189,18 +185,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-[var(--bg-secondary)] rounded-lg p-3">
-                <p className="text-[var(--text-muted)] text-xs mb-1.5">Davet Linki</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-[var(--accent)] text-xs flex-1 truncate">{inviteLink}</p>
-                  <button
-                    onClick={() => copyToClipboard(inviteLink, 'link')}
-                    className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
-                  >
-                    {copied === 'link' ? <Check className="w-4 h-4 text-[var(--success)]" /> : <LinkIcon className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         )}
