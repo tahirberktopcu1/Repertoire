@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext'
 import { useBand } from './BandContext'
 import type { SongWithVotes, Vote } from '@/lib/types'
 import { requestNotificationPermission, sendNotification } from '@/lib/notifications'
+import { sendPushToGroup } from '@/lib/push'
 
 export interface DeficiencyItem {
   id: string
@@ -192,6 +193,10 @@ export function SongsProvider({ children }: { children: ReactNode }) {
     })
     if (!error) {
       sendNotification('Yeni Şarkı Önerisi!', `${song.title} - ${song.artist}`, `song-new`)
+      // Push bildirim — uygulama kapalı olsa bile gider
+      if (currentBand) {
+        sendPushToGroup(currentBand.id, 'Yeni Şarkı Önerisi!', `${song.title} - ${song.artist}`, '/songs')
+      }
       await refresh()
     }
   }
