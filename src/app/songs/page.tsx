@@ -55,7 +55,7 @@ export default function SongsPage() {
     if (!myVotedIds.has(s.id)) return false
     const songVoterCount = new Set(completeVotes.filter((v) => v.song_id === s.id).map((v) => v.user_id)).size
     return songVoterCount < memberCount
-  })
+  }).sort((a, b) => b.avg_score - a.avg_score)
   const readySongs = [...songs.filter((s) => {
     if (!myVotedIds.has(s.id)) return false
     const songVoterCount = new Set(completeVotes.filter((v) => v.song_id === s.id).map((v) => v.user_id)).size
