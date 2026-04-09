@@ -39,6 +39,7 @@ interface SongCardProps {
   onToggleDeficiency?: (id: string) => void
   voteLabel1?: string
   voteLabel2?: string
+  audienceRequired?: boolean
 }
 
 function ScoreBar({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
@@ -93,6 +94,7 @@ export default function SongCard({
   onToggleDeficiency,
   voteLabel1 = 'Beğenim',
   voteLabel2 = 'Seyirci Tahmini',
+  audienceRequired = true,
 }: SongCardProps) {
   const [showDefPanel, setShowDefPanel] = useState(false)
   const [newDeficiency, setNewDeficiency] = useState('')
@@ -234,8 +236,15 @@ export default function SongCard({
                 value={currentValue}
                 onChange={(v) => {
                   setLocalRating(v)
-                  const aud = localAudienceRating !== undefined ? localAudienceRating : (userVote?.audience_value ?? null)
-                  onRate?.(v, aud)
+                  if (audienceRequired) {
+                    // Zorunlu: ikisi de verilmişse kaydet
+                    const aud = localAudienceRating !== undefined ? (localAudienceRating ?? 0) : (userVote?.audience_value ?? 0)
+                    if (aud > 0) onRate?.(v, aud)
+                  } else {
+                    // Opsiyonel: beğeni yeterli
+                    const aud = localAudienceRating !== undefined ? localAudienceRating : (userVote?.audience_value ?? null)
+                    onRate?.(v, aud)
+                  }
                 }}
               />
             </div>
@@ -244,13 +253,26 @@ export default function SongCard({
               <ScoreBar
                 value={currentAudience}
                 onChange={(v) => {
-                  // Toggle: aynı değere tıklarsa kaldır
-                  const newAud = v === currentAudience ? null : v
-                  setLocalAudienceRating(newAud)
-                  const val = localRating ?? userVote?.value ?? 0
-                  if (val > 0) onRate?.(val, newAud)
+                  if (audienceRequired) {
+                    // Zorunlu: toggle yok, ikisi de verilmişse kaydet
+                    setLocalAudienceRating(v)
+                    const val = localRating ?? userVote?.value ?? 0
+                    if (val > 0) onRate?.(val, v)
+                  } else {
+                    // Opsiyonel: toggle, aynı değere tıklarsa kaldır
+                    const newAud = v === currentAudience ? null : v
+                    setLocalAudienceRating(newAud)
+                    const val = localRating ?? userVote?.value ?? 0
+                    if (val > 0) onRate?.(val, newAud)
+                  }
                 }}
               />
+              {audienceRequired && currentValue > 0 && currentAudience === 0 && (
+                <p className="text-[var(--warning)] text-xs mt-1">Seyirci tahmini puanını da verin</p>
+              )}
+              {audienceRequired && currentAudience > 0 && currentValue === 0 && (
+                <p className="text-[var(--warning)] text-xs mt-1">Beğeni puanını da verin</p>
+              )}
             </div>
             {voteDetails.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
