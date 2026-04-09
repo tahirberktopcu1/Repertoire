@@ -22,7 +22,7 @@ interface VoteDetail {
 interface SongCardProps {
   song: SongWithVotes
   userVote: Vote | null
-  onRate?: (value: number) => void
+  onRate?: (value: number, audienceValue: number) => void
   onAddToRepertoire?: () => void
   onRemove?: () => void
   onEdit?: (title: string, artist: string) => void
@@ -36,6 +36,8 @@ interface SongCardProps {
   deficiencies?: { id: string; content: string; is_resolved: boolean; user_name: string }[]
   onAddDeficiency?: (content: string) => void
   onToggleDeficiency?: (id: string) => void
+  voteLabel1?: string
+  voteLabel2?: string
 }
 
 function ScoreBar({ value, onChange, readonly = false }: { value: number; onChange?: (v: number) => void; readonly?: boolean }) {
@@ -88,6 +90,8 @@ export default function SongCard({
   deficiencies = [],
   onAddDeficiency,
   onToggleDeficiency,
+  voteLabel1 = 'Beğenim',
+  voteLabel2 = 'Seyirci Tahmini',
 }: SongCardProps) {
   const [showDefPanel, setShowDefPanel] = useState(false)
   const [newDeficiency, setNewDeficiency] = useState('')
@@ -96,11 +100,12 @@ export default function SongCard({
   const [editTitle, setEditTitle] = useState(song.title)
   const [editArtist, setEditArtist] = useState(song.artist || '')
   const [localRating, setLocalRating] = useState<number | null>(null)
+  const [localAudienceRating, setLocalAudienceRating] = useState<number | null>(null)
 
   // userVote güncellenince local state'i sıfırla
   useEffect(() => {
-    if (userVote) setLocalRating(null)
-  }, [userVote?.value])
+    if (userVote) { setLocalRating(null); setLocalAudienceRating(null) }
+  }, [userVote?.value, userVote?.audience_value])
 
   const addDeficiency = () => {
     if (!newDeficiency.trim() || !onAddDeficiency) return
@@ -215,15 +220,33 @@ export default function SongCard({
           )}
         </div>
 
-        {/* Rating bar */}
+        {/* Rating bars */}
         {showVoting && (
-          <div className="mt-3 pt-3 border-t border-[var(--border)]">
-            <ScoreBar
-              value={localRating ?? userVote?.value ?? 0}
-              onChange={(v) => { setLocalRating(v); onRate?.(v) }}
-            />
+          <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-3">
+            <div>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel1}</label>
+              <ScoreBar
+                value={localRating ?? userVote?.value ?? 0}
+                onChange={(v) => {
+                  setLocalRating(v)
+                  const av = localAudienceRating ?? userVote?.audience_value ?? 0
+                  if (av > 0) onRate?.(v, av)
+                }}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel2}</label>
+              <ScoreBar
+                value={localAudienceRating ?? userVote?.audience_value ?? 0}
+                onChange={(v) => {
+                  setLocalAudienceRating(v)
+                  const rv = localRating ?? userVote?.value ?? 0
+                  if (rv > 0) onRate?.(rv, v)
+                }}
+              />
+            </div>
             {voteDetails.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
+              <div className="flex flex-wrap gap-1.5">
                 {voteDetails.map((v) => (
                   <span
                     key={v.user_name}

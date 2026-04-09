@@ -185,22 +185,22 @@ export const mockRepertoireSongs: SongWithVotes[] = [
 // Her kullanicinin verdig puan (1-10)
 export const mockVotes: Vote[] = [
   // Tahir
-  { id: 'vote-001', song_id: 'song-001', user_id: MOCK_USER_ID, value: 9, created_at: '2026-03-01T00:00:00Z' },
-  { id: 'vote-002', song_id: 'song-002', user_id: MOCK_USER_ID, value: 7, created_at: '2026-03-02T00:00:00Z' },
-  { id: 'vote-003', song_id: 'song-004', user_id: MOCK_USER_ID, value: 4, created_at: '2026-03-04T00:00:00Z' },
+  { id: 'vote-001', song_id: 'song-001', user_id: MOCK_USER_ID, value: 9, audience_value: 8, created_at: '2026-03-01T00:00:00Z' },
+  { id: 'vote-002', song_id: 'song-002', user_id: MOCK_USER_ID, value: 7, audience_value: 6, created_at: '2026-03-02T00:00:00Z' },
+  { id: 'vote-003', song_id: 'song-004', user_id: MOCK_USER_ID, value: 4, audience_value: 5, created_at: '2026-03-04T00:00:00Z' },
   // Ahmet
-  { id: 'vote-011', song_id: 'song-001', user_id: 'mock-user-002', value: 8, created_at: '2026-03-01T00:00:00Z' },
-  { id: 'vote-012', song_id: 'song-002', user_id: 'mock-user-002', value: 8, created_at: '2026-03-02T00:00:00Z' },
-  { id: 'vote-013', song_id: 'song-003', user_id: 'mock-user-002', value: 7, created_at: '2026-03-03T00:00:00Z' },
+  { id: 'vote-011', song_id: 'song-001', user_id: 'mock-user-002', value: 8, audience_value: 7, created_at: '2026-03-01T00:00:00Z' },
+  { id: 'vote-012', song_id: 'song-002', user_id: 'mock-user-002', value: 8, audience_value: 7, created_at: '2026-03-02T00:00:00Z' },
+  { id: 'vote-013', song_id: 'song-003', user_id: 'mock-user-002', value: 7, audience_value: 6, created_at: '2026-03-03T00:00:00Z' },
   // Mehmet
-  { id: 'vote-021', song_id: 'song-001', user_id: 'mock-user-003', value: 9, created_at: '2026-03-01T00:00:00Z' },
-  { id: 'vote-022', song_id: 'song-002', user_id: 'mock-user-003', value: 6, created_at: '2026-03-02T00:00:00Z' },
-  { id: 'vote-023', song_id: 'song-004', user_id: 'mock-user-003', value: 6, created_at: '2026-03-04T00:00:00Z' },
+  { id: 'vote-021', song_id: 'song-001', user_id: 'mock-user-003', value: 9, audience_value: 8, created_at: '2026-03-01T00:00:00Z' },
+  { id: 'vote-022', song_id: 'song-002', user_id: 'mock-user-003', value: 6, audience_value: 5, created_at: '2026-03-02T00:00:00Z' },
+  { id: 'vote-023', song_id: 'song-004', user_id: 'mock-user-003', value: 6, audience_value: 7, created_at: '2026-03-04T00:00:00Z' },
   // Zeynep
-  { id: 'vote-031', song_id: 'song-001', user_id: 'mock-user-004', value: 8, created_at: '2026-03-01T00:00:00Z' },
-  { id: 'vote-032', song_id: 'song-002', user_id: 'mock-user-004', value: 8, created_at: '2026-03-02T00:00:00Z' },
-  { id: 'vote-033', song_id: 'song-003', user_id: 'mock-user-003', value: 5, created_at: '2026-03-03T00:00:00Z' },
-  { id: 'vote-034', song_id: 'song-005', user_id: 'mock-user-004', value: 3, created_at: '2026-03-05T00:00:00Z' },
+  { id: 'vote-031', song_id: 'song-001', user_id: 'mock-user-004', value: 8, audience_value: 9, created_at: '2026-03-01T00:00:00Z' },
+  { id: 'vote-032', song_id: 'song-002', user_id: 'mock-user-004', value: 8, audience_value: 7, created_at: '2026-03-02T00:00:00Z' },
+  { id: 'vote-033', song_id: 'song-003', user_id: 'mock-user-003', value: 5, audience_value: 4, created_at: '2026-03-03T00:00:00Z' },
+  { id: 'vote-034', song_id: 'song-005', user_id: 'mock-user-004', value: 3, audience_value: 2, created_at: '2026-03-05T00:00:00Z' },
 ]
 
 // Kullanıcı id -> isim eşlemesi

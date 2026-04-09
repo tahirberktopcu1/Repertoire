@@ -338,14 +338,31 @@ export default function RepertoirePage() {
                         </div>
                       )}
 
-                      {/* Puanlama */}
+                      {/* Puanlama - Çalma Kalitesi */}
                       <div>
                         <h4 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                          Şarkı Puanı
+                          Ne Kadar İyi Çaldık
                         </h4>
                         <ScoreBar
                           value={userRepVote?.value ?? 0}
-                          onChange={(v) => { rateRepertoireSong(song.id, v); toast('Puan kaydedildi!') }}
+                          onChange={(v) => {
+                            const av = userRepVote?.audience_value ?? 0
+                            if (av > 0) { rateRepertoireSong(song.id, v, av); toast('Puan kaydedildi!') }
+                          }}
+                        />
+                      </div>
+
+                      {/* Puanlama - Seyirci Beğenisi */}
+                      <div>
+                        <h4 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                          Seyirci Ne Kadar Beğendi
+                        </h4>
+                        <ScoreBar
+                          value={userRepVote?.audience_value ?? 0}
+                          onChange={(v) => {
+                            const rv = userRepVote?.value ?? 0
+                            if (rv > 0) { rateRepertoireSong(song.id, rv, v); toast('Puan kaydedildi!') }
+                          }}
                         />
                         {songRepVotes.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -358,7 +375,7 @@ export default function RepertoirePage() {
                                   : 'bg-[#f8514922] text-[var(--danger)]'
                                 }`}
                               >
-                                {memberNames[v.user_id] || 'Bilinmeyen'}: {v.value}
+                                {memberNames[v.user_id] || 'Bilinmeyen'}: {v.value}/{v.audience_value}
                               </span>
                             ))}
                           </div>

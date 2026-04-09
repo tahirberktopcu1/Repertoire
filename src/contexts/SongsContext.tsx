@@ -32,9 +32,9 @@ interface SongsContextType {
   moveToRepertoire: (songId: string) => Promise<void>
   removeFromRepertoire: (songId: string) => Promise<void>
   reorderRepertoire: (songId: string, direction: 'up' | 'down') => void
-  rateSong: (songId: string, value: number) => Promise<void>
+  rateSong: (songId: string, value: number, audienceValue: number) => Promise<void>
   addDirectToRepertoire: (title: string, artist: string, spotifyUrl?: string, youtubeUrl?: string) => Promise<string>
-  rateRepertoireSong: (songId: string, value: number) => Promise<void>
+  rateRepertoireSong: (songId: string, value: number, audienceValue: number) => Promise<void>
   editSong: (songId: string, title: string, artist: string) => Promise<void>
   addDeficiency: (songId: string, content: string, assignedTo: string | null, assignedToName: string) => Promise<void>
   resolveDeficiency: (songId: string, defId: string) => Promise<void>
@@ -227,17 +227,13 @@ export function SongsProvider({ children }: { children: ReactNode }) {
     setRepertoire(newList)
   }
 
-  const rateSong = async (songId: string, value: number) => {
+  const rateSong = async (songId: string, value: number, audienceValue: number) => {
     if (!user) return
     const existing = votes.find((v) => v.song_id === songId && v.user_id === user.id)
     if (existing) {
-      if (existing.value === value) {
-        await supabase.from('votes').delete().eq('id', existing.id)
-      } else {
-        await supabase.from('votes').update({ value }).eq('id', existing.id)
-      }
+      await supabase.from('votes').update({ value, audience_value: audienceValue }).eq('id', existing.id)
     } else {
-      await supabase.from('votes').insert({ song_id: songId, user_id: user.id, value })
+      await supabase.from('votes').insert({ song_id: songId, user_id: user.id, value, audience_value: audienceValue })
     }
     await refresh()
   }
@@ -257,17 +253,13 @@ export function SongsProvider({ children }: { children: ReactNode }) {
     return data?.id || ''
   }
 
-  const rateRepertoireSong = async (songId: string, value: number) => {
+  const rateRepertoireSong = async (songId: string, value: number, audienceValue: number) => {
     if (!user) return
     const existing = repertoireVotes.find((v) => v.song_id === songId && v.user_id === user.id)
     if (existing) {
-      if (existing.value === value) {
-        await supabase.from('repertoire_votes').delete().eq('id', existing.id)
-      } else {
-        await supabase.from('repertoire_votes').update({ value }).eq('id', existing.id)
-      }
+      await supabase.from('repertoire_votes').update({ value, audience_value: audienceValue }).eq('id', existing.id)
     } else {
-      await supabase.from('repertoire_votes').insert({ song_id: songId, user_id: user.id, value })
+      await supabase.from('repertoire_votes').insert({ song_id: songId, user_id: user.id, value, audience_value: audienceValue })
     }
     await refresh()
   }

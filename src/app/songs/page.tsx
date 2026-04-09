@@ -40,8 +40,8 @@ export default function SongsPage() {
     toast('Şarkı önerildi!')
   }
 
-  const handleRate = async (songId: string, value: number) => {
-    await rateSong(songId, value)
+  const handleRate = async (songId: string, value: number, audienceValue: number) => {
+    await rateSong(songId, value, audienceValue)
     toast('Puanınız kaydedildi!')
   }
 
@@ -161,7 +161,7 @@ export default function SongsPage() {
                   <SongCard
                     song={song}
                     userVote={votes.find((v) => v.song_id === song.id && v.user_id === userId) || null}
-                    onRate={(value) => handleRate(song.id, value)}
+                    onRate={(value, audienceValue) => handleRate(song.id, value, audienceValue)}
                     onAddToRepertoire={isReady ? () => { moveToRepertoire(song.id); addSongToRehearsal(song.id); toast('Repertuvara eklendi!') } : undefined}
                     onRemove={() => { removeSong(song.id); toast('Şarkı silindi!') }}
                     onEdit={(t, a) => { editSong(song.id, t, a); toast('Şarkı güncellendi!') }}
