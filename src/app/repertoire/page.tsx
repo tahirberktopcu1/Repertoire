@@ -77,19 +77,19 @@ export default function RepertoirePage() {
     return songRepVotes.length > 0 ? Math.max(0, rawAvg - penalty) : 0
   }
 
-  // Bu hafta eklenenleri en üste koy, geri kalanı mevcut sırada bırak
-  const manualSorted = [
-    ...repertoire.filter((s) => showNewSongs && newSongIds.has(s.id)),
-    ...repertoire.filter((s) => !showNewSongs || !newSongIds.has(s.id)),
-  ]
+  // Yeni eklenenler sıralamadan bağımsız en üstte, geri kalanlar sıralanır
+  const newSongsList = repertoire.filter((s) => newSongIds.has(s.id))
+  const restSongs = repertoire.filter((s) => !newSongIds.has(s.id))
 
-  const sortedRepertoire = [...manualSorted].sort((a, b) => {
+  const sortedRest = [...restSongs].sort((a, b) => {
     if (sortBy === 'score-asc') return getFinalScore(a) - getFinalScore(b)
     if (sortBy === 'score-desc') return getFinalScore(b) - getFinalScore(a)
     if (sortBy === 'date-asc') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     if (sortBy === 'date-desc') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     return 0
   })
+
+  const sortedRepertoire = [...newSongsList, ...sortedRest]
 
   const filteredSongs = sortedRepertoire.filter((s) => {
     if (!search) return true
