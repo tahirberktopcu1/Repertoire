@@ -40,7 +40,7 @@ export default function SongsPage() {
     toast('Şarkı önerildi!')
   }
 
-  const handleRate = async (songId: string, value: number, audienceValue: number) => {
+  const handleRate = async (songId: string, value: number, audienceValue: number | null) => {
     await rateSong(songId, value, audienceValue)
     toast('Puanınız kaydedildi!')
   }

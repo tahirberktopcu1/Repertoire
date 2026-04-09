@@ -17,13 +17,13 @@ import {
 interface VoteDetail {
   user_name: string
   value: number
-  audience_value: number
+  audience_value: number | null
 }
 
 interface SongCardProps {
   song: SongWithVotes
   userVote: Vote | null
-  onRate?: (value: number, audienceValue: number) => void
+  onRate?: (value: number, audienceValue: number | null) => void
   onAddToRepertoire?: () => void
   onRemove?: () => void
   onEdit?: (title: string, artist: string) => void
@@ -101,11 +101,11 @@ export default function SongCard({
   const [editTitle, setEditTitle] = useState(song.title)
   const [editArtist, setEditArtist] = useState(song.artist || '')
   const [localRating, setLocalRating] = useState<number | null>(null)
-  const [localAudienceRating, setLocalAudienceRating] = useState<number | null>(null)
+  const [localAudienceRating, setLocalAudienceRating] = useState<number | null | undefined>(undefined)
 
   // userVote güncellenince local state'i sıfırla
   useEffect(() => {
-    if (userVote) { setLocalRating(null); setLocalAudienceRating(null) }
+    if (userVote) { setLocalRating(null); setLocalAudienceRating(undefined) }
   }, [userVote?.value, userVote?.audience_value])
 
   const addDeficiency = () => {
@@ -224,11 +224,7 @@ export default function SongCard({
         {/* Rating bars */}
         {showVoting && (() => {
           const currentValue = localRating ?? userVote?.value ?? 0
-          const currentAudience = localAudienceRating ?? (userVote ? userVote.audience_value : 0)
-
-          const trySubmit = (val: number, aud: number) => {
-            if (val > 0 && aud > 0) onRate?.(val, aud)
-          }
+          const currentAudience = localAudienceRating !== undefined ? (localAudienceRating ?? 0) : (userVote?.audience_value ?? 0)
 
           return (
           <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-3">
@@ -238,32 +234,28 @@ export default function SongCard({
                 value={currentValue}
                 onChange={(v) => {
                   setLocalRating(v)
-                  const aud = localAudienceRating ?? (userVote ? userVote.audience_value : 0)
-                  trySubmit(v, aud)
+                  const aud = localAudienceRating !== undefined ? localAudienceRating : (userVote?.audience_value ?? null)
+                  onRate?.(v, aud)
                 }}
               />
             </div>
             <div>
-              <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel2}</label>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel2} <span className="text-[var(--text-muted)] font-normal normal-case">(opsiyonel)</span></label>
               <ScoreBar
                 value={currentAudience}
                 onChange={(v) => {
-                  setLocalAudienceRating(v)
-                  const val = localRating ?? (userVote ? userVote.value : 0)
-                  trySubmit(val, v)
+                  // Toggle: aynı değere tıklarsa kaldır
+                  const newAud = v === currentAudience ? null : v
+                  setLocalAudienceRating(newAud)
+                  const val = localRating ?? userVote?.value ?? 0
+                  if (val > 0) onRate?.(val, newAud)
                 }}
               />
-              {currentValue > 0 && currentAudience === 0 && (
-                <p className="text-[var(--warning)] text-xs mt-1">Seyirci puanını da verin</p>
-              )}
-              {currentAudience > 0 && currentValue === 0 && (
-                <p className="text-[var(--warning)] text-xs mt-1">Beğeni puanını da verin</p>
-              )}
             </div>
             {voteDetails.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {voteDetails.map((v) => {
-                  const avg = Math.round(((v.value + v.audience_value) / 2) * 10) / 10
+                  const avg = v.audience_value != null ? Math.round(((v.value + v.audience_value) / 2) * 10) / 10 : v.value
                   return (
                     <span
                       key={v.user_name}
@@ -273,7 +265,7 @@ export default function SongCard({
                         : 'bg-[#f8514922] text-[var(--danger)]'
                       }`}
                     >
-                      {v.user_name}: {v.value}/{v.audience_value}
+                      {v.user_name}: {v.value}{v.audience_value != null ? `/${v.audience_value}` : ''}
                     </span>
                   )
                 })}

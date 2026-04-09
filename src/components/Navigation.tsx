@@ -23,8 +23,8 @@ export default function Navigation() {
   const { songs, votes, allDeficiencies } = useSongs()
   const [showBandMenu, setShowBandMenu] = useState(false)
 
-  // Kullanıcının henüz oy vermediği şarkı sayısı (iki eksen de verilmemişse)
-  const unratedCount = user ? songs.filter((s) => !votes.some((v) => v.song_id === s.id && v.user_id === user.id && v.value > 0 && v.audience_value > 0)).length : 0
+  // Kullanıcının henüz oy vermediği şarkı sayısı
+  const unratedCount = user ? songs.filter((s) => !votes.some((v) => v.song_id === s.id && v.user_id === user.id && v.value > 0)).length : 0
 
   // Benim + grup eksikleri sayısı
   const myDefCount = user ? allDeficiencies.filter((d) => d.assigned_to === user.id || d.assigned_to === null).length : 0

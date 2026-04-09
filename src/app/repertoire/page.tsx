@@ -343,22 +343,22 @@ export default function RepertoirePage() {
                         <ScoreBar
                           value={userRepVote?.value ?? 0}
                           onChange={(v) => {
-                            const av = userRepVote?.audience_value || v
-                            rateRepertoireSong(song.id, v, av); toast('Puan kaydedildi!')
+                            rateRepertoireSong(song.id, v, userRepVote?.audience_value ?? null); toast('Puan kaydedildi!')
                           }}
                         />
                       </div>
 
-                      {/* Puanlama - Seyirci Beğenisi */}
+                      {/* Puanlama - Seyirci Beğenisi (opsiyonel, toggle) */}
                       <div>
                         <h4 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                          Seyirci Ne Kadar Beğendi
+                          Seyirci Ne Kadar Beğendi <span className="font-normal normal-case">(opsiyonel)</span>
                         </h4>
                         <ScoreBar
                           value={userRepVote?.audience_value ?? 0}
                           onChange={(v) => {
-                            const rv = userRepVote?.value || v
-                            rateRepertoireSong(song.id, rv, v); toast('Puan kaydedildi!')
+                            const newAud = v === (userRepVote?.audience_value ?? 0) ? null : v
+                            const rv = userRepVote?.value ?? 0
+                            if (rv > 0) { rateRepertoireSong(song.id, rv, newAud); toast('Puan kaydedildi!') }
                           }}
                         />
                         {songRepVotes.length > 0 && (

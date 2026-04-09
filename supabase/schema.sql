@@ -51,7 +51,7 @@ create table public.votes (
   song_id uuid references public.songs(id) on delete cascade not null,
   user_id uuid references public.profiles(id) on delete cascade not null,
   value int not null check (value >= 1 and value <= 10),
-  audience_value int not null check (audience_value >= 1 and audience_value <= 10),
+  audience_value int check (audience_value >= 1 and audience_value <= 10),
   created_at timestamptz default now() not null,
   unique(song_id, user_id)
 );
@@ -61,7 +61,7 @@ create table public.repertoire_votes (
   song_id uuid references public.songs(id) on delete cascade not null,
   user_id uuid references public.profiles(id) on delete cascade not null,
   value int not null check (value >= 1 and value <= 10),
-  audience_value int not null check (audience_value >= 1 and audience_value <= 10),
+  audience_value int check (audience_value >= 1 and audience_value <= 10),
   created_at timestamptz default now() not null,
   unique(song_id, user_id)
 );

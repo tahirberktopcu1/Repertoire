@@ -32,9 +32,9 @@ interface SongsContextType {
   moveToRepertoire: (songId: string) => Promise<void>
   removeFromRepertoire: (songId: string) => Promise<void>
   reorderRepertoire: (songId: string, direction: 'up' | 'down') => void
-  rateSong: (songId: string, value: number, audienceValue: number) => Promise<void>
+  rateSong: (songId: string, value: number, audienceValue: number | null) => Promise<void>
   addDirectToRepertoire: (title: string, artist: string, spotifyUrl?: string, youtubeUrl?: string) => Promise<string>
-  rateRepertoireSong: (songId: string, value: number, audienceValue: number) => Promise<void>
+  rateRepertoireSong: (songId: string, value: number, audienceValue: number | null) => Promise<void>
   editSong: (songId: string, title: string, artist: string) => Promise<void>
   addDeficiency: (songId: string, content: string, assignedTo: string | null, assignedToName: string) => Promise<void>
   resolveDeficiency: (songId: string, defId: string) => Promise<void>
@@ -77,7 +77,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
       const songVotes = allVotes.filter((v) => v.song_id === s.id)
       const vote_count = songVotes.length
       const avg_score = vote_count > 0
-        ? Math.round((songVotes.reduce((sum, v) => sum + (v.value + (v.audience_value || v.value)) / 2, 0) / vote_count) * 10) / 10
+        ? Math.round((songVotes.reduce((sum, v) => sum + (v.audience_value != null ? (v.value + v.audience_value) / 2 : v.value), 0) / vote_count) * 10) / 10
         : 0
       return {
         ...s,
@@ -227,7 +227,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
     setRepertoire(newList)
   }
 
-  const rateSong = async (songId: string, value: number, audienceValue: number) => {
+  const rateSong = async (songId: string, value: number, audienceValue: number | null) => {
     if (!user) return
     const existing = votes.find((v) => v.song_id === songId && v.user_id === user.id)
     if (existing) {
@@ -253,7 +253,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
     return data?.id || ''
   }
 
-  const rateRepertoireSong = async (songId: string, value: number, audienceValue: number) => {
+  const rateRepertoireSong = async (songId: string, value: number, audienceValue: number | null) => {
     if (!user) return
     const existing = repertoireVotes.find((v) => v.song_id === songId && v.user_id === user.id)
     if (existing) {

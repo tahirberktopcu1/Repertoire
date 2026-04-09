@@ -47,7 +47,7 @@ export interface Vote {
   song_id: string
   user_id: string
   value: number // 1-10 (beğeni / çalma kalitesi)
-  audience_value: number // 1-10 (seyirci tahmini / seyirci beğenisi)
+  audience_value: number | null // 1-10 (seyirci tahmini / seyirci beğenisi), null = verilmemiş
   created_at: string
 }
 
