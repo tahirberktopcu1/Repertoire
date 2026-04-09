@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Music, ListMusic, Home, Settings, ChevronDown, AlertCircle } from 'lucide-react'
 import { useBand } from '@/contexts/BandContext'
+import { useSongs } from '@/contexts/SongsContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useState } from 'react'
 
 const navItems = [
@@ -17,7 +19,12 @@ const navItems = [
 export default function Navigation() {
   const pathname = usePathname()
   const { bands, currentBand, setCurrentBand } = useBand()
+  const { user } = useAuth()
+  const { songs, votes } = useSongs()
   const [showBandMenu, setShowBandMenu] = useState(false)
+
+  // Kullanıcının henüz oy vermediği şarkı sayısı
+  const unratedCount = user ? songs.filter((s) => !votes.some((v) => v.song_id === s.id && v.user_id === user.id)).length : 0
 
   return (
     <>
@@ -77,11 +84,18 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center py-2.5 px-3 min-w-0 transition-colors ${
+                className={`flex flex-col items-center py-2.5 px-3 min-w-0 transition-colors relative ${
                   isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <div className="relative">
+                  <Icon className="w-5 h-5" />
+                  {item.href === '/songs' && unratedCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
+                      {unratedCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] mt-1 truncate">{item.label}</span>
               </Link>
             )

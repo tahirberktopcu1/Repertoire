@@ -42,7 +42,8 @@ create table public.songs (
   suggested_by uuid references public.profiles(id) not null,
   status text default 'suggested' check (status in ('suggested', 'approved')) not null,
   created_at timestamptz default now() not null,
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  practiced_at timestamptz
 );
 
 create table public.votes (

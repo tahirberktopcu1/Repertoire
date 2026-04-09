@@ -23,8 +23,7 @@ export default function RehearsalsPage() {
   const [endTime, setEndTime] = useState('21:00')
   const [location, setLocation] = useState('')
 
-  // Bu hafta eklenenler (repertuvarin ilk 2'si)
-  const thisWeekSongs = repertoire.slice(0, 2)
+  const newSongs = repertoire.filter((s) => !s.practiced_at)
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,15 +104,15 @@ export default function RehearsalsPage() {
         {isExpanded && (
           <div className="border-t border-[var(--border)] p-4 space-y-4">
 
-            {/* Bu Hafta Eklenenler */}
-            {thisWeekSongs.length > 0 && (
+            {/* Yeni Eklenenler */}
+            {newSongs.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-[var(--orange)] mb-2 flex items-center gap-1.5">
                   <Star className="w-4 h-4" />
-                  Bu Hafta Eklenenler
+                  Yeni Eklenenler
                 </h4>
                 <div className="space-y-1.5">
-                  {thisWeekSongs.map((song, i) => {
+                  {newSongs.map((song, i) => {
                     const defs = (deficiencies[song.id] || []).filter((d) => !d.is_resolved)
                     return (
                       <div key={song.id} className="bg-[var(--bg-secondary)] rounded-lg px-3 py-2.5 border border-[var(--orange)]/30">

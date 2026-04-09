@@ -33,6 +33,7 @@ export interface Song {
   suggested_by: string
   status: SongStatus
   created_at: string
+  practiced_at: string | null
 }
 
 export interface SongWithVotes extends Song {

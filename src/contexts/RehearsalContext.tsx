@@ -179,9 +179,16 @@ export function RehearsalProvider({ children }: { children: ReactNode }) {
     setPendingSongIds([])
   }
 
-  const clearRehearsal = () => {
-    if (activeRehearsal) {
-      supabase.from('rehearsals').update({ is_active: false }).eq('id', activeRehearsal.id)
+  const clearRehearsal = async () => {
+    if (activeRehearsal && currentBand) {
+      await supabase.from('rehearsals').update({ is_active: false }).eq('id', activeRehearsal.id)
+      // Tüm yeni şarkıları "çalışıldı" olarak işaretle
+      const { error, count } = await supabase.from('songs')
+        .update({ practiced_at: new Date().toISOString() })
+        .eq('band_id', currentBand.id)
+        .eq('status', 'approved')
+        .is('practiced_at', null)
+      console.log('[clearRehearsal] practiced_at update:', { error, count, bandId: currentBand.id })
     }
     setActiveRehearsal(null)
     setIsRehearsalOver(false)

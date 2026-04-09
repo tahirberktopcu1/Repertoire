@@ -4,7 +4,6 @@ import { useState } from 'react'
 import AppShell from '@/components/AppShell'
 import { useSongs } from '@/contexts/SongsContext'
 import { useBand } from '@/contexts/BandContext'
-import { useRehearsal } from '@/contexts/RehearsalContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { ListMusic, Search, Play, ChevronUp, ChevronDown, Trash2, AlertCircle, Check, Star, Plus, X, Users, Loader2, ArrowUpDown, Pencil } from 'lucide-react'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -49,14 +48,12 @@ export default function RepertoirePage() {
   const { user } = useAuth()
   const { members } = useBand()
   const { repertoire, deficiencies, removeFromRepertoire, reorderRepertoire, addDeficiency, resolveDeficiency, addDirectToRepertoire, rateRepertoireSong, repertoireVotes, editSong } = useSongs()
-  const { activeRehearsal, isRehearsalOver, pendingSongIds } = useRehearsal()
   const { toast } = useToast()
   const userId = user?.id || ''
   const memberNames: Record<string, string> = {}
   members.forEach((m) => { memberNames[m.user_id] = (m.profiles as any)?.full_name || 'Bilinmeyen' })
-  const activeIds = activeRehearsal && !isRehearsalOver ? activeRehearsal.newSongIds : pendingSongIds
-  const thisWeekIds = new Set(activeIds)
-  const showThisWeek = thisWeekIds.size > 0
+  const newSongIds = new Set(repertoire.filter((s) => !s.practiced_at).map((s) => s.id))
+  const showNewSongs = newSongIds.size > 0
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [newDeficiency, setNewDeficiency] = useState('')
@@ -82,8 +79,8 @@ export default function RepertoirePage() {
 
   // Bu hafta eklenenleri en üste koy, geri kalanı mevcut sırada bırak
   const manualSorted = [
-    ...repertoire.filter((s) => showThisWeek && thisWeekIds.has(s.id)),
-    ...repertoire.filter((s) => !showThisWeek || !thisWeekIds.has(s.id)),
+    ...repertoire.filter((s) => showNewSongs && newSongIds.has(s.id)),
+    ...repertoire.filter((s) => !showNewSongs || !newSongIds.has(s.id)),
   ]
 
   const sortedRepertoire = [...manualSorted].sort((a, b) => {
@@ -171,16 +168,16 @@ export default function RepertoirePage() {
           </div>
         )}
 
-        {showThisWeek && !search && (
+        {showNewSongs && !search && (
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-[var(--orange)]" />
-            <span className="text-sm font-medium text-[var(--orange)]">Bu Hafta Eklenenler</span>
+            <span className="text-sm font-medium text-[var(--orange)]">Yeni Eklenenler</span>
           </div>
         )}
 
         <div className="space-y-2">
           {filteredSongs.map((song, i) => {
-            const isTop2 = showThisWeek && thisWeekIds.has(song.id) && !search
+            const isTop2 = showNewSongs && newSongIds.has(song.id) && !search
             const isExpanded = expandedId === song.id
             const defs = deficiencies[song.id] || []
             const originalIndex = repertoire.findIndex((s) => s.id === song.id)
@@ -196,8 +193,8 @@ export default function RepertoirePage() {
               : null
 
             // Ayırıcı
-            const prevIsThisWeek = i > 0 && showThisWeek && thisWeekIds.has(filteredSongs[i - 1]?.id)
-            const showSeparator = showThisWeek && !isTop2 && !search && prevIsThisWeek
+            const prevIsThisWeek = i > 0 && showNewSongs && newSongIds.has(filteredSongs[i - 1]?.id)
+            const showSeparator = showNewSongs && !isTop2 && !search && prevIsThisWeek
 
             return (
               <div key={song.id}>

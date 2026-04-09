@@ -70,6 +70,7 @@ export const mockSongs: SongWithVotes[] = [
     avg_score: 8.5,
     vote_count: 4,
     suggested_by_name: 'Tahir',
+    practiced_at: null,
   },
   {
     id: 'song-002',
@@ -84,6 +85,7 @@ export const mockSongs: SongWithVotes[] = [
     avg_score: 7.3,
     vote_count: 3,
     suggested_by_name: 'Ahmet',
+    practiced_at: null,
   },
   {
     id: 'song-003',
@@ -98,6 +100,7 @@ export const mockSongs: SongWithVotes[] = [
     avg_score: 6.0,
     vote_count: 2,
     suggested_by_name: 'Mehmet',
+    practiced_at: null,
   },
   {
     id: 'song-004',
@@ -112,6 +115,7 @@ export const mockSongs: SongWithVotes[] = [
     avg_score: 5.0,
     vote_count: 2,
     suggested_by_name: 'Zeynep',
+    practiced_at: null,
   },
   {
     id: 'song-005',
@@ -126,6 +130,7 @@ export const mockSongs: SongWithVotes[] = [
     avg_score: 3.5,
     vote_count: 2,
     suggested_by_name: 'Tahir',
+    practiced_at: null,
   },
 ]
 
@@ -143,6 +148,7 @@ export const mockRepertoireSongs: SongWithVotes[] = [
     avg_score: 9.2,
     vote_count: 4,
     suggested_by_name: 'Tahir',
+    practiced_at: null,
   },
   {
     id: 'song-011',
@@ -157,6 +163,7 @@ export const mockRepertoireSongs: SongWithVotes[] = [
     avg_score: 8.8,
     vote_count: 4,
     suggested_by_name: 'Ahmet',
+    practiced_at: null,
   },
   {
     id: 'song-012',
@@ -171,6 +178,7 @@ export const mockRepertoireSongs: SongWithVotes[] = [
     avg_score: 7.5,
     vote_count: 4,
     suggested_by_name: 'Mehmet',
+    practiced_at: null,
   },
 ]
 

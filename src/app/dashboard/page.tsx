@@ -17,7 +17,7 @@ import { tr } from 'date-fns/locale'
 export default function DashboardPage() {
   const { currentBand } = useBand()
   const { repertoire, deficiencies, resolveDeficiency } = useSongs()
-  const { activeRehearsal, isRehearsalOver, pendingSongIds, createRehearsal, updateRehearsal, deleteRehearsal, clearRehearsal } = useRehearsal()
+  const { activeRehearsal, isRehearsalOver, createRehearsal, updateRehearsal, deleteRehearsal, clearRehearsal } = useRehearsal()
   const { toast } = useToast()
 
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -74,11 +74,18 @@ export default function DashboardPage() {
     setLocation('')
   }
 
-  // Bu hafta eklenenler — aktif provadaki veya henüz prova oluşturulmadan seçilenler
-  const thisWeekIds = activeRehearsal && !isRehearsalOver
-    ? activeRehearsal.newSongIds
-    : pendingSongIds
-  const thisWeekSongs = repertoire.filter((s) => thisWeekIds.includes(s.id))
+  const handleTimeInput = (value: string, setter: (v: string) => void) => {
+    // Sadece rakam ve : kabul et
+    const digits = value.replace(/[^0-9]/g, '')
+    if (digits.length <= 2) {
+      setter(digits)
+    } else {
+      setter(digits.slice(0, 2) + ':' + digits.slice(2, 4))
+    }
+  }
+
+  // Yeni Eklenenler: practiced_at null olan repertuvar şarkıları
+  const newSongs = repertoire.filter((s) => !s.practiced_at)
 
   // Eksikleri olan parçalar
   const songsWithDefs = repertoire.filter((s) => {
@@ -96,13 +103,13 @@ export default function DashboardPage() {
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="relative">
+      <div className="relative" onClick={(e) => { const inp = (e.currentTarget as HTMLElement).querySelector('input'); inp?.showPicker?.(); inp?.focus() }}>
         <label className="text-xs text-[var(--text-muted)] mb-1 block">Tarih</label>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className={`w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${date ? 'text-[var(--text-primary)]' : 'text-transparent'}`}
+          className={`w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] cursor-pointer ${date ? 'text-[var(--text-primary)]' : '[color:transparent] [&::-webkit-datetime-edit]:invisible'}`}
           required
         />
         {!date && (
@@ -115,20 +122,26 @@ export default function DashboardPage() {
         <div className="flex-1">
           <label className="text-xs text-[var(--text-muted)] mb-1 block">Başlangıç</label>
           <input
-            type="time"
+            type="text"
+            inputMode="numeric"
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            onChange={(e) => handleTimeInput(e.target.value, setStartTime)}
+            placeholder="19:00"
+            maxLength={5}
+            className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder-[var(--text-muted)]"
             required
           />
         </div>
         <div className="flex-1">
           <label className="text-xs text-[var(--text-muted)] mb-1 block">Bitiş</label>
           <input
-            type="time"
+            type="text"
+            inputMode="numeric"
             value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            onChange={(e) => handleTimeInput(e.target.value, setEndTime)}
+            placeholder="21:00"
+            maxLength={5}
+            className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder-[var(--text-muted)]"
             required
           />
         </div>
@@ -141,6 +154,7 @@ export default function DashboardPage() {
           onChange={(e) => setLocation(e.target.value)}
           placeholder="Konum girin..."
           className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder-[var(--text-muted)]"
+          required
         />
       </div>
       <button
@@ -206,7 +220,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4 mt-1.5 text-sm text-[var(--text-secondary)]">
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
-                {activeRehearsal.start_time} - {activeRehearsal.end_time}
+                {activeRehearsal.start_time.slice(0, 5)} - {activeRehearsal.end_time.slice(0, 5)}
               </span>
               {activeRehearsal.location && (
                 <span className="flex items-center gap-1">
@@ -260,15 +274,15 @@ export default function DashboardPage() {
           rehearsalFormContent(handleCreateRehearsal, 'Oluştur')
         }
 
-        {/* Bu Hafta Eklenenler */}
-        {thisWeekSongs.length > 0 && (
+        {/* Yeni Eklenenler */}
+        {newSongs.length > 0 && (
           <div>
             <h2 className="text-sm font-medium text-[var(--orange)] mb-2 flex items-center gap-1.5">
               <Star className="w-4 h-4" />
-              Bu Hafta Eklenenler
+              Yeni Eklenenler
             </h2>
             <div className="space-y-1.5">
-              {thisWeekSongs.map((song, i) => {
+              {newSongs.map((song, i) => {
                 const defs = deficiencies[song.id] || []
                 return (
                   <div key={song.id} className="bg-[var(--bg-card)] rounded-xl border border-[var(--orange)]/30 px-3 py-2.5">
