@@ -351,8 +351,7 @@ export default function RepertoirePage() {
                       {/* Puanlama - Seyirci Beğenisi (opsiyonel, toggle) */}
                       <div>
                         <h4 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                          Seyirci Ne Kadar Beğendi <span className="font-normal normal-case">(opsiyonel)</span>
-                        </h4>
+                          Seyirci Ne Kadar Beğendi                        </h4>
                         <ScoreBar
                           value={userRepVote?.audience_value ?? 0}
                           onChange={(v) => {

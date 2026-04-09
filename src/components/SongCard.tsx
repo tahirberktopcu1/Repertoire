@@ -240,7 +240,7 @@ export default function SongCard({
               />
             </div>
             <div>
-              <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel2} <span className="text-[var(--text-muted)] font-normal normal-case">(opsiyonel)</span></label>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel2}</label>
               <ScoreBar
                 value={currentAudience}
                 onChange={(v) => {
