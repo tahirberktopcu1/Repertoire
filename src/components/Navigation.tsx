@@ -20,11 +20,14 @@ export default function Navigation() {
   const pathname = usePathname()
   const { bands, currentBand, setCurrentBand } = useBand()
   const { user } = useAuth()
-  const { songs, votes } = useSongs()
+  const { songs, votes, allDeficiencies } = useSongs()
   const [showBandMenu, setShowBandMenu] = useState(false)
 
   // Kullanıcının henüz oy vermediği şarkı sayısı
   const unratedCount = user ? songs.filter((s) => !votes.some((v) => v.song_id === s.id && v.user_id === user.id)).length : 0
+
+  // Benim + grup eksikleri sayısı
+  const myDefCount = user ? allDeficiencies.filter((d) => d.assigned_to === user.id || d.assigned_to === null).length : 0
 
   return (
     <>
@@ -93,6 +96,11 @@ export default function Navigation() {
                   {item.href === '/songs' && unratedCount > 0 && (
                     <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
                       {unratedCount}
+                    </span>
+                  )}
+                  {item.href === '/deficiencies' && myDefCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
+                      {myDefCount}
                     </span>
                   )}
                 </div>
