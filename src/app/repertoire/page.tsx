@@ -288,15 +288,12 @@ export default function RepertoirePage() {
                       )}
                     </div>
 
-                    {/* Şarkı puanı (üye ort. - eksik cezası) */}
+                    {/* Şarkı puanı */}
                     {finalScore !== null && (
                       <div className="flex-shrink-0 text-center">
                         <div className={`text-sm font-bold ${
                           finalScore >= 7 ? 'text-[var(--success)]' : finalScore >= 4 ? 'text-[var(--warning)]' : 'text-[var(--danger)]'
                         }`}>{finalScore}</div>
-                        {defs.length > 0 && (
-                          <div className="text-[var(--warning)] text-[10px]">-{penalty}</div>
-                        )}
                       </div>
                     )}
 
