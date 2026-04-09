@@ -169,7 +169,7 @@ export default function SongsPage() {
                     notRated={tab === 'unrated'}
                     voteDetails={votes
                       .filter((v) => v.song_id === song.id)
-                      .map((v) => ({ user_name: memberNames[v.user_id] || 'Bilinmeyen', value: v.value }))
+                      .map((v) => ({ user_name: memberNames[v.user_id] || 'Bilinmeyen', value: v.value, audience_value: v.audience_value }))
                     }
                     statusBadge={undefined}
                   />

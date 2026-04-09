@@ -17,6 +17,7 @@ import {
 interface VoteDetail {
   user_name: string
   value: number
+  audience_value: number
 }
 
 interface SongCardProps {
@@ -253,18 +254,21 @@ export default function SongCard({
             </div>
             {voteDetails.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {voteDetails.map((v) => (
-                  <span
-                    key={v.user_name}
-                    className={`text-xs px-2 py-0.5 rounded-full ${
-                      v.value >= 7 ? 'bg-[#3fb95022] text-[var(--success)]'
-                      : v.value >= 4 ? 'bg-[#d2992222] text-[var(--warning)]'
-                      : 'bg-[#f8514922] text-[var(--danger)]'
-                    }`}
-                  >
-                    {v.user_name}: {v.value}
-                  </span>
-                ))}
+                {voteDetails.map((v) => {
+                  const avg = Math.round(((v.value + v.audience_value) / 2) * 10) / 10
+                  return (
+                    <span
+                      key={v.user_name}
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        avg >= 7 ? 'bg-[#3fb95022] text-[var(--success)]'
+                        : avg >= 4 ? 'bg-[#d2992222] text-[var(--warning)]'
+                        : 'bg-[#f8514922] text-[var(--danger)]'
+                      }`}
+                    >
+                      {v.user_name}: {v.value}/{v.audience_value}
+                    </span>
+                  )
+                })}
               </div>
             )}
           </div>
