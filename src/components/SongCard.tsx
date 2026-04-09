@@ -222,33 +222,41 @@ export default function SongCard({
         </div>
 
         {/* Rating bars */}
-        {showVoting && (
+        {showVoting && (() => {
+          const currentValue = localRating ?? userVote?.value ?? 0
+          const currentAudience = localAudienceRating ?? (userVote ? userVote.audience_value : 0)
+
+          const trySubmit = (val: number, aud: number) => {
+            if (val > 0 && aud > 0) onRate?.(val, aud)
+          }
+
+          return (
           <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-3">
             <div>
               <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel1}</label>
               <ScoreBar
-                value={localRating ?? userVote?.value ?? 0}
+                value={currentValue}
                 onChange={(v) => {
                   setLocalRating(v)
-                  const av = localAudienceRating ?? userVote?.audience_value ?? 0
-                  if (av > 0) onRate?.(v, av)
+                  const aud = localAudienceRating ?? (userVote ? userVote.audience_value : 0)
+                  trySubmit(v, aud)
                 }}
               />
             </div>
             <div>
               <label className="text-xs text-[var(--text-muted)] mb-1 block">{voteLabel2}</label>
               <ScoreBar
-                value={localAudienceRating ?? userVote?.audience_value ?? 0}
+                value={currentAudience}
                 onChange={(v) => {
                   setLocalAudienceRating(v)
-                  const rv = localRating ?? userVote?.value ?? 0
-                  if (rv > 0) onRate?.(rv, v)
+                  const val = localRating ?? (userVote ? userVote.value : 0)
+                  trySubmit(val, v)
                 }}
               />
-              {(localRating ?? userVote?.value ?? 0) > 0 && (localAudienceRating ?? userVote?.audience_value ?? 0) === 0 && (
+              {currentValue > 0 && currentAudience === 0 && (
                 <p className="text-[var(--warning)] text-xs mt-1">Seyirci puanını da verin</p>
               )}
-              {(localAudienceRating ?? userVote?.audience_value ?? 0) > 0 && (localRating ?? userVote?.value ?? 0) === 0 && (
+              {currentAudience > 0 && currentValue === 0 && (
                 <p className="text-[var(--warning)] text-xs mt-1">Beğeni puanını da verin</p>
               )}
             </div>
@@ -272,7 +280,8 @@ export default function SongCard({
               </div>
             )}
           </div>
-        )}
+          )
+        })()}
 
         {/* Actions row */}
         <div className="flex items-center gap-2 mt-3">
