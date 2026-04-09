@@ -178,8 +178,10 @@ export default function SongCard({
 
   const sendComment = async () => {
     if (!newComment.trim() || !user) return
-    await supabase.from('song_comments').insert({ song_id: song.id, user_id: user.id, content: newComment.trim() })
+    const text = newComment.trim()
     setNewComment('')
+    const { error } = await supabase.from('song_comments').insert({ song_id: song.id, user_id: user.id, content: text })
+    if (error) console.error('[sendComment] error:', error)
   }
 
   // userVote güncellenince local state'i sıfırla
