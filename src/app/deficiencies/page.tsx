@@ -23,8 +23,8 @@ export default function DeficienciesPage() {
 
   const filteredDefs = allDeficiencies.filter((d) => {
     if (filter === 'mine') return d.assigned_to === userId
-    if (filter === 'group') return d.assigned_to === 'group'
-    if (filter === 'others') return d.assigned_to !== userId && d.assigned_to !== 'group'
+    if (filter === 'group') return d.assigned_to === null
+    if (filter === 'others') return d.assigned_to !== null && d.assigned_to !== userId
     return true
   })
 
@@ -41,8 +41,8 @@ export default function DeficienciesPage() {
   }
 
   const myCount = allDeficiencies.filter((d) => d.assigned_to === userId).length
-  const groupCount = allDeficiencies.filter((d) => d.assigned_to === 'group').length
-  const othersCount = allDeficiencies.filter((d) => d.assigned_to !== userId && d.assigned_to !== 'group').length
+  const groupCount = allDeficiencies.filter((d) => d.assigned_to === null).length
+  const othersCount = allDeficiencies.filter((d) => d.assigned_to !== null && d.assigned_to !== userId).length
 
   const tabs: { key: FilterType; label: string; icon: any; count: number }[] = [
     { key: 'mine', label: 'Benim', icon: User, count: myCount },
@@ -119,7 +119,7 @@ export default function DeficienciesPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[var(--text-primary)] text-sm">{def.content}</p>
                         <span className={`inline-block mt-1 text-xs px-1.5 py-0.5 rounded ${
-                          def.assigned_to === 'group'
+                          def.assigned_to === null
                             ? 'bg-[var(--accent-subtle)] text-[var(--accent)]'
                             : def.assigned_to === userId
                             ? 'bg-[#d2992222] text-[var(--warning)]'
