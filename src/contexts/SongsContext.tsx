@@ -251,6 +251,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
       youtube_url: youtubeUrl || null,
       suggested_by: user.id,
       status: 'approved',
+      practiced_at: new Date().toISOString(),
     }).select('id').single()
     await refresh()
     return data?.id || ''
