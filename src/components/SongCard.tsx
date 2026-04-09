@@ -229,8 +229,8 @@ export default function SongCard({
                 value={localRating ?? userVote?.value ?? 0}
                 onChange={(v) => {
                   setLocalRating(v)
-                  const av = (localAudienceRating ?? userVote?.audience_value) || v
-                  onRate?.(v, av)
+                  const av = localAudienceRating ?? userVote?.audience_value ?? 0
+                  if (av > 0) onRate?.(v, av)
                 }}
               />
             </div>
@@ -240,10 +240,16 @@ export default function SongCard({
                 value={localAudienceRating ?? userVote?.audience_value ?? 0}
                 onChange={(v) => {
                   setLocalAudienceRating(v)
-                  const rv = (localRating ?? userVote?.value) || v
-                  onRate?.(rv, v)
+                  const rv = localRating ?? userVote?.value ?? 0
+                  if (rv > 0) onRate?.(rv, v)
                 }}
               />
+              {(localRating ?? userVote?.value ?? 0) > 0 && (localAudienceRating ?? userVote?.audience_value ?? 0) === 0 && (
+                <p className="text-[var(--warning)] text-xs mt-1">Seyirci puanını da verin</p>
+              )}
+              {(localAudienceRating ?? userVote?.audience_value ?? 0) > 0 && (localRating ?? userVote?.value ?? 0) === 0 && (
+                <p className="text-[var(--warning)] text-xs mt-1">Beğeni puanını da verin</p>
+              )}
             </div>
             {voteDetails.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
