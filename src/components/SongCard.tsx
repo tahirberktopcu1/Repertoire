@@ -117,17 +117,32 @@ export default function SongCard({
   const [showChat, setShowChat] = useState(false)
   const [comments, setComments] = useState<{ id: string; user_id: string; content: string; created_at: string; user_name: string }[]>([])
   const [commentCount, setCommentCount] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
   const [newComment, setNewComment] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
+
+  const lastReadKey = `chat-lastread-${song.id}`
+  const getLastRead = () => typeof window !== 'undefined' ? localStorage.getItem(lastReadKey) || '1970-01-01' : '1970-01-01'
+  const markAsRead = () => { if (typeof window !== 'undefined') localStorage.setItem(lastReadKey, new Date().toISOString()); setUnreadCount(0) }
 
   const memberNames: Record<string, string> = {}
   members.forEach((m: any) => { memberNames[m.user_id] = m.profiles?.full_name || 'Bilinmeyen' })
 
-  // Yorum sayısını çek
+  // Yorum sayısını ve okunmamışları çek
   useEffect(() => {
-    supabase.from('song_comments').select('id', { count: 'exact', head: true }).eq('song_id', song.id)
-      .then(({ count }: any) => setCommentCount(count || 0))
+    const lastRead = getLastRead()
+    supabase.from('song_comments').select('id, created_at, user_id').eq('song_id', song.id)
+      .then(({ data }: any) => {
+        const all = data || []
+        setCommentCount(all.length)
+        setUnreadCount(all.filter((c: any) => c.created_at > lastRead && c.user_id !== user?.id).length)
+      })
   }, [song.id])
+
+  // Chat açılınca okundu işaretle
+  useEffect(() => {
+    if (showChat) markAsRead()
+  }, [showChat])
 
   // Chat yükle
   useEffect(() => {
@@ -156,6 +171,10 @@ export default function SongCard({
               created_at: payload.new.created_at, user_name: memberNames[payload.new.user_id] || 'Bilinmeyen',
             }]
             setCommentCount(updated.length)
+            // Kendi mesajımız değilse ve chat kapalıysa okunmamış
+            if (payload.new.user_id !== user?.id) {
+              setUnreadCount((prev) => prev + 1)
+            }
             return updated
           })
         } else if (payload.eventType === 'DELETE') {
@@ -414,12 +433,19 @@ export default function SongCard({
           )}
 
           <button
-            onClick={() => setShowChat(!showChat)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+            onClick={() => { setShowChat(!showChat); if (!showChat) markAsRead() }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors relative ${
               showChat ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]'
             }`}
           >
-            <MessageCircle className="w-4 h-4" />
+            <div className="relative">
+              <MessageCircle className="w-4 h-4" />
+              {unreadCount > 0 && !showChat && (
+                <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[8px] font-bold min-w-[14px] h-3.5 rounded-full flex items-center justify-center px-0.5">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
             {commentCount > 0 && <span className="text-xs">{commentCount}</span>}
           </button>
 
