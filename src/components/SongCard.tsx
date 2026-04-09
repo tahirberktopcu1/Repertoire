@@ -229,8 +229,8 @@ export default function SongCard({
                 value={localRating ?? userVote?.value ?? 0}
                 onChange={(v) => {
                   setLocalRating(v)
-                  const av = localAudienceRating ?? userVote?.audience_value ?? 0
-                  if (av > 0) onRate?.(v, av)
+                  const av = (localAudienceRating ?? userVote?.audience_value) || v
+                  onRate?.(v, av)
                 }}
               />
             </div>
@@ -240,8 +240,8 @@ export default function SongCard({
                 value={localAudienceRating ?? userVote?.audience_value ?? 0}
                 onChange={(v) => {
                   setLocalAudienceRating(v)
-                  const rv = localRating ?? userVote?.value ?? 0
-                  if (rv > 0) onRate?.(rv, v)
+                  const rv = (localRating ?? userVote?.value) || v
+                  onRate?.(rv, v)
                 }}
               />
             </div>

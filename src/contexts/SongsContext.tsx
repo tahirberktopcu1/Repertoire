@@ -77,7 +77,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
       const songVotes = allVotes.filter((v) => v.song_id === s.id)
       const vote_count = songVotes.length
       const avg_score = vote_count > 0
-        ? Math.round((songVotes.reduce((sum, v) => sum + v.value, 0) / vote_count) * 10) / 10
+        ? Math.round((songVotes.reduce((sum, v) => sum + (v.value + (v.audience_value || v.value)) / 2, 0) / vote_count) * 10) / 10
         : 0
       return {
         ...s,

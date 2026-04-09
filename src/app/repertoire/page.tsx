@@ -346,8 +346,8 @@ export default function RepertoirePage() {
                         <ScoreBar
                           value={userRepVote?.value ?? 0}
                           onChange={(v) => {
-                            const av = userRepVote?.audience_value ?? 0
-                            if (av > 0) { rateRepertoireSong(song.id, v, av); toast('Puan kaydedildi!') }
+                            const av = userRepVote?.audience_value || v
+                            rateRepertoireSong(song.id, v, av); toast('Puan kaydedildi!')
                           }}
                         />
                       </div>
@@ -360,8 +360,8 @@ export default function RepertoirePage() {
                         <ScoreBar
                           value={userRepVote?.audience_value ?? 0}
                           onChange={(v) => {
-                            const rv = userRepVote?.value ?? 0
-                            if (rv > 0) { rateRepertoireSong(song.id, rv, v); toast('Puan kaydedildi!') }
+                            const rv = userRepVote?.value || v
+                            rateRepertoireSong(song.id, rv, v); toast('Puan kaydedildi!')
                           }}
                         />
                         {songRepVotes.length > 0 && (
