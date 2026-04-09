@@ -46,19 +46,20 @@ export default function SongsPage() {
   }
 
   const memberCount = members.length
-  const myVotedIds = new Set(votes.filter((v) => v.user_id === userId).map((v) => v.song_id))
+  const myVotedIds = new Set(votes.filter((v) => v.user_id === userId && v.value > 0 && v.audience_value != null && v.audience_value > 0).map((v) => v.song_id))
 
   // Kategorize et
   const unratedSongs = songs.filter((s) => !myVotedIds.has(s.id)) // Ben oylamadım
+  const completeVotes = votes.filter((v) => v.value > 0 && v.audience_value != null && v.audience_value > 0)
   const pendingSongs = songs.filter((s) => {
-    if (!myVotedIds.has(s.id)) return false // Ben oylamadım = unrated
-    const songVoterCount = new Set(votes.filter((v) => v.song_id === s.id).map((v) => v.user_id)).size
-    return songVoterCount < memberCount // Herkes oylamadı
+    if (!myVotedIds.has(s.id)) return false
+    const songVoterCount = new Set(completeVotes.filter((v) => v.song_id === s.id).map((v) => v.user_id)).size
+    return songVoterCount < memberCount
   })
   const readySongs = [...songs.filter((s) => {
     if (!myVotedIds.has(s.id)) return false
-    const songVoterCount = new Set(votes.filter((v) => v.song_id === s.id).map((v) => v.user_id)).size
-    return songVoterCount >= memberCount // Herkes oyladı
+    const songVoterCount = new Set(completeVotes.filter((v) => v.song_id === s.id).map((v) => v.user_id)).size
+    return songVoterCount >= memberCount
   })].sort((a, b) => b.avg_score - a.avg_score)
 
   const currentSongs = (tab === 'unrated' ? unratedSongs : tab === 'pending' ? pendingSongs : readySongs)
