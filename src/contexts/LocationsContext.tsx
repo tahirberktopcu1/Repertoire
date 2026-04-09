@@ -37,7 +37,7 @@ export function LocationsProvider({ children }: { children: ReactNode }) {
     // Realtime: konum değişiklikleri anlık
     const channel = supabase
       .channel(`locations-${currentBand.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations', filter: `band_id=eq.${currentBand.id}` }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, () => {
         loadLocations()
       })
       .subscribe()

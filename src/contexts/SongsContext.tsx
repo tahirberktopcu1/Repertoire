@@ -168,11 +168,11 @@ export function SongsProvider({ children }: { children: ReactNode }) {
 
     const channel = supabase
       .channel(`band-${currentBand.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'songs', filter: `band_id=eq.${currentBand.id}` }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'songs' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'repertoire_votes' }, () => refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'deficiencies' }, () => refresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_members', filter: `band_id=eq.${currentBand.id}` }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_members' }, () => refresh())
       .subscribe()
 
     return () => {

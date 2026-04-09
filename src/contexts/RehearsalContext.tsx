@@ -111,12 +111,12 @@ export function RehearsalProvider({ children }: { children: ReactNode }) {
 
     const channel = supabase
       .channel(`rehearsal-rt-${currentBand.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'rehearsals', filter: `band_id=eq.${currentBand.id}` }, () => loadRehearsal())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rehearsals' }, () => loadRehearsal())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'rehearsal_songs' }, () => loadRehearsal())
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [currentBand?.id])
+  }, [currentBand?.id, loadRehearsal])
 
   // Her dakika bitiş kontrolü
   useEffect(() => {

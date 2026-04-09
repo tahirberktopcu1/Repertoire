@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useBand } from '@/contexts/BandContext'
 import { useSongs } from '@/contexts/SongsContext'
 import { useRehearsal } from '@/contexts/RehearsalContext'
-import { useLocations } from '@/contexts/LocationsContext'
 import AppShell from '@/components/AppShell'
 import { checkRehearsalReminders } from '@/lib/notifications'
 import {
@@ -19,7 +18,6 @@ export default function DashboardPage() {
   const { currentBand } = useBand()
   const { repertoire, deficiencies, resolveDeficiency } = useSongs()
   const { activeRehearsal, isRehearsalOver, pendingSongIds, createRehearsal, updateRehearsal, deleteRehearsal, clearRehearsal } = useRehearsal()
-  const { locations } = useLocations()
   const { toast } = useToast()
 
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -90,8 +88,7 @@ export default function DashboardPage() {
 
   const isRehearsalToday = activeRehearsal && isToday(parseISO(activeRehearsal.date))
 
-  // Prova formu (oluştur veya düzenle)
-  const RehearsalForm = ({ onSubmit, submitLabel }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string }) => (
+  const rehearsalFormContent = (onSubmit: (e: React.FormEvent) => void, submitLabel: string) => (
     <form onSubmit={onSubmit} className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] p-4 space-y-3">
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-sm font-medium text-[var(--text-primary)]">{editing ? 'Provayı Düzenle' : 'Yeni Prova'}</h3>
@@ -99,13 +96,21 @@ export default function DashboardPage() {
           <X className="w-4 h-4" />
         </button>
       </div>
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-        required
-      />
+      <div className="relative">
+        <label className="text-xs text-[var(--text-muted)] mb-1 block">Tarih</label>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className={`w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ${date ? 'text-[var(--text-primary)]' : 'text-transparent'}`}
+          required
+        />
+        {!date && (
+          <span className="absolute left-3 bottom-2.5 text-[var(--text-muted)] text-sm pointer-events-none">
+            Tarih seçiniz
+          </span>
+        )}
+      </div>
       <div className="flex gap-2">
         <div className="flex-1">
           <label className="text-xs text-[var(--text-muted)] mb-1 block">Başlangıç</label>
@@ -130,16 +135,13 @@ export default function DashboardPage() {
       </div>
       <div>
         <label className="text-xs text-[var(--text-muted)] mb-1 block">Konum</label>
-        <select
+        <input
+          type="text"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-        >
-          <option value="">Konum seçin...</option>
-          {locations.map((loc) => (
-            <option key={loc} value={loc}>{loc}</option>
-          ))}
-        </select>
+          placeholder="Konum girin..."
+          className="w-full px-3 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] placeholder-[var(--text-muted)]"
+        />
       </div>
       <button
         type="submit"
@@ -217,7 +219,7 @@ export default function DashboardPage() {
         )}
 
         {/* Düzenleme formu */}
-        {editing && <RehearsalForm onSubmit={handleUpdate} submitLabel="Güncelle" />}
+        {editing && rehearsalFormContent(handleUpdate, 'Güncelle')}
 
         {/* Prova bitti */}
         {activeRehearsal && isRehearsalOver && (
@@ -254,9 +256,9 @@ export default function DashboardPage() {
           </button>
         )}
 
-        {!activeRehearsal && showCreateForm && (
-          <RehearsalForm onSubmit={handleCreateRehearsal} submitLabel="Oluştur" />
-        )}
+        {!activeRehearsal && showCreateForm &&
+          rehearsalFormContent(handleCreateRehearsal, 'Oluştur')
+        }
 
         {/* Bu Hafta Eklenenler */}
         {thisWeekSongs.length > 0 && (

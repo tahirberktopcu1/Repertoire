@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from './AuthContext'
 import type { Band, BandMember } from '@/lib/types'
@@ -39,7 +39,7 @@ export function BandProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  const refreshBands = async () => {
+  const refreshBands = useCallback(async () => {
     if (!user) { setLoading(false); return }
 
     const { data } = await supabase
@@ -50,25 +50,28 @@ export function BandProvider({ children }: { children: ReactNode }) {
     const userBands: Band[] = (data || []).map((d: any) => d.bands as Band).filter(Boolean)
     setBands(userBands)
 
-    if (!currentBand && userBands.length > 0) {
-      const savedId = typeof window !== 'undefined' ? localStorage.getItem('currentBandId') : null
-      const saved = userBands.find((b) => b.id === savedId)
-      setCurrentBand(saved || userBands[0])
-    } else if (currentBand) {
-      const updated = userBands.find((b) => b.id === currentBand.id)
-      if (updated) setCurrentBand(updated)
-    }
+    setCurrentBand((prev) => {
+      if (!prev && userBands.length > 0) {
+        const savedId = typeof window !== 'undefined' ? localStorage.getItem('currentBandId') : null
+        const saved = userBands.find((b) => b.id === savedId)
+        return saved || userBands[0]
+      } else if (prev) {
+        const updated = userBands.find((b) => b.id === prev.id)
+        return updated || (userBands.length > 0 ? userBands[0] : null)
+      }
+      return prev
+    })
     setLoading(false)
-  }
+  }, [user])
 
-  const refreshMembers = async () => {
+  const refreshMembers = useCallback(async () => {
     if (!currentBand) return
     const { data } = await supabase
       .from('band_members')
       .select('*, profiles(*)')
       .eq('band_id', currentBand.id)
     if (data) setMembers(data as any)
-  }
+  }, [currentBand?.id])
 
   useEffect(() => {
     if (user) {
@@ -78,14 +81,14 @@ export function BandProvider({ children }: { children: ReactNode }) {
       setCurrentBand(null)
       setLoading(false)
     }
-  }, [user])
+  }, [user, refreshBands])
 
   useEffect(() => {
     if (currentBand) {
       if (typeof window !== 'undefined') localStorage.setItem('currentBandId', currentBand.id)
       refreshMembers()
     }
-  }, [currentBand])
+  }, [currentBand, refreshMembers])
 
   // Realtime: üye değişiklikleri, grup güncellemeleri anlık
   useEffect(() => {
@@ -93,15 +96,14 @@ export function BandProvider({ children }: { children: ReactNode }) {
 
     const channel = supabase
       .channel(`band-mgmt-${currentBand.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_members', filter: `band_id=eq.${currentBand.id}` }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_members' }, () => {
         refreshMembers()
         refreshBands()
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bands', filter: `id=eq.${currentBand.id}` }, (payload: any) => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bands' }, (payload: any) => {
         if (payload.eventType === 'DELETE') {
-          // Grup silindi — diğer kullanıcıları bilgilendir
           window.location.href = '/dashboard'
-        } else if (payload.eventType === 'UPDATE') {
+        } else {
           refreshBands()
         }
       })
@@ -110,7 +112,7 @@ export function BandProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [currentBand?.id])
+  }, [currentBand?.id, refreshMembers, refreshBands])
 
   const renameBand = async (name: string) => {
     if (!currentBand || !name.trim()) return
@@ -122,14 +124,9 @@ export function BandProvider({ children }: { children: ReactNode }) {
 
   const deleteBand = async () => {
     if (!currentBand || !user) return
-    // Önce bağlı verileri sil (CASCADE çalışmazsa diye)
-    await supabase.from('rehearsal_songs').delete().in('rehearsal_id',
-      (await supabase.from('rehearsals').select('id').eq('band_id', currentBand.id)).data?.map((r: any) => r.id) || []
-    )
-    await supabase.from('rehearsals').delete().eq('band_id', currentBand.id)
-    await supabase.from('songs').delete().eq('band_id', currentBand.id)
-    await supabase.from('locations').delete().eq('band_id', currentBand.id)
-    await supabase.from('band_members').delete().eq('band_id', currentBand.id)
+    // Sadece owner silebilir
+    if (currentBand.created_by !== user.id) return
+    // CASCADE ile bands silinince tüm bağlı veriler otomatik silinir
     await supabase.from('bands').delete().eq('id', currentBand.id)
     const remaining = bands.filter((b) => b.id !== currentBand.id)
     setBands(remaining)

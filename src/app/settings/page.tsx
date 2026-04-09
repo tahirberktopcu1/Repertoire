@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBand } from '@/contexts/BandContext'
-import { useLocations } from '@/contexts/LocationsContext'
 import AppShell from '@/components/AppShell'
 import {
   Settings,
@@ -13,7 +12,6 @@ import {
   Check,
   LogOut,
   Link as LinkIcon,
-  MapPin,
   Plus,
   X,
   Pencil,
@@ -30,7 +28,6 @@ export default function SettingsPage() {
   const { currentBand, members, renameBand, deleteBand, leaveBand, refreshBands } = useBand()
   const [editingName, setEditingName] = useState(false)
   const [bandName, setBandName] = useState(currentBand?.name || '')
-  const { locations, addLocation, removeLocation } = useLocations()
   const [copied, setCopied] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<'delete' | 'leave' | null>(null)
   const [showJoinForm, setShowJoinForm] = useState(false)
@@ -42,7 +39,6 @@ export default function SettingsPage() {
   const [joinLoading, setJoinLoading] = useState(false)
   const supabase = createClient()
   const { toast } = useToast()
-  const [newLocation, setNewLocation] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const handleCreateGroup = async () => {
@@ -50,14 +46,17 @@ export default function SettingsPage() {
     setCreateLoading(true)
 
     // RLS auth.uid() otomatik kullanır — userId göndermeye gerek yok
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (!currentUser) { setCreateLoading(false); toast('Oturum bulunamadı', 'error'); return }
+
     const { data: band, error: bandErr } = await supabase.from('bands')
-      .insert({ name: newGroupName.trim() })
+      .insert({ name: newGroupName.trim(), created_by: currentUser.id })
       .select().single()
 
     if (bandErr) { setCreateLoading(false); toast('Grup oluşturulamadı', 'error'); return }
 
     if (band) {
-      await supabase.from('band_members').insert({ band_id: band.id })
+      await supabase.from('band_members').insert({ band_id: band.id, user_id: currentUser.id })
       toast('Grup oluşturuldu!')
       // Band context'i güncelle — refreshBands user'a bağlı, user null olabilir
       // Direkt window.location ile full reload yap
@@ -89,8 +88,10 @@ export default function SettingsPage() {
 
     const band = bands[0]
 
-    // user_id DEFAULT auth.uid() — Supabase RLS otomatik halleder
-    const { error: insertErr } = await supabase.from('band_members').insert({ band_id: band.id })
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (!currentUser) { setJoinError('Oturum bulunamadı'); setJoinLoading(false); return }
+
+    const { error: insertErr } = await supabase.from('band_members').insert({ band_id: band.id, user_id: currentUser.id })
     if (insertErr) {
       setJoinError('Katılma hatası: ' + insertErr.message)
       toast('Katılma hatası', 'error')
@@ -108,21 +109,6 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const handleAddLocation = async () => {
-    if (!newLocation.trim()) return
-    setActionLoading('addLocation')
-    await addLocation(newLocation.trim())
-    setNewLocation('')
-    setActionLoading(null)
-    toast('Konum eklendi!')
-  }
-
-  const handleRemoveLocation = async (loc: string) => {
-    setActionLoading(`removeLocation-${loc}`)
-    await removeLocation(loc)
-    setActionLoading(null)
-    toast('Konum silindi!')
-  }
 
   const handleRenameBand = async () => {
     setActionLoading('rename')
@@ -232,54 +218,6 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
-
-        {/* Locations */}
-        <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] p-4">
-          <h2 className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            Konumlar / Stüdyolar
-          </h2>
-
-          <div className="flex gap-2 mb-3">
-            <input
-              type="text"
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLocation())}
-              className="flex-1 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-              placeholder="Yeni konum ekle..."
-            />
-            <button
-              onClick={handleAddLocation}
-              disabled={actionLoading === 'addLocation'}
-              className="px-3 py-2 bg-[var(--accent)] text-white rounded-lg text-sm hover:opacity-90 transition-opacity flex items-center gap-1 disabled:opacity-50"
-            >
-              {actionLoading === 'addLocation' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Ekle
-            </button>
-          </div>
-
-          <div className="space-y-1.5">
-            {locations.map((loc) => (
-              <div key={loc} className="flex items-center justify-between bg-[var(--bg-secondary)] rounded-lg px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                  <span className="text-[var(--text-primary)] text-sm">{loc}</span>
-                </div>
-                <button
-                  onClick={() => handleRemoveLocation(loc)}
-                  disabled={actionLoading === `removeLocation-${loc}`}
-                  className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
-                >
-                  {actionLoading === `removeLocation-${loc}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                </button>
-              </div>
-            ))}
-            {locations.length === 0 && (
-              <p className="text-[var(--text-muted)] text-sm py-2">Henüz konum eklenmemiş</p>
-            )}
-          </div>
-        </div>
 
         {/* Members */}
         <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border)] p-4">

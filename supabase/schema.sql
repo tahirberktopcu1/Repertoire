@@ -100,7 +100,20 @@ create table public.locations (
 );
 
 -- ============================================
--- 2. TRIGGER - Otomatik profil oluşturma
+-- 2. HELPER FUNCTION - RLS recursive sorgu çözümü
+-- ============================================
+
+create or replace function public.get_my_band_ids()
+returns setof uuid
+language sql
+security definer
+stable
+as $$
+  select band_id from public.band_members where user_id = auth.uid();
+$$;
+
+-- ============================================
+-- 3. TRIGGER - Otomatik profil oluşturma
 -- ============================================
 
 create or replace function public.handle_new_user()
@@ -148,11 +161,13 @@ create policy "profiles_update" on public.profiles for update using (auth.uid() 
 create policy "bands_select" on public.bands for select using (true);
 create policy "bands_insert" on public.bands for insert with check (auth.uid() = created_by);
 create policy "bands_update" on public.bands for update
-  using (id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (id in (select public.get_my_band_ids()));
+create policy "bands_delete" on public.bands for delete
+  using (auth.uid() = created_by);
 
 -- BAND MEMBERS
 create policy "band_members_select" on public.band_members for select
-  using (band_id in (select bm.band_id from public.band_members bm where bm.user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 create policy "band_members_insert" on public.band_members for insert
   with check (user_id = auth.uid());
 create policy "band_members_delete" on public.band_members for delete
@@ -160,60 +175,60 @@ create policy "band_members_delete" on public.band_members for delete
 
 -- SONGS
 create policy "songs_select" on public.songs for select
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 create policy "songs_insert" on public.songs for insert
-  with check (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  with check (band_id in (select public.get_my_band_ids()));
 create policy "songs_update" on public.songs for update
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 create policy "songs_delete" on public.songs for delete
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 
 -- VOTES
 create policy "votes_select" on public.votes for select
-  using (song_id in (select s.id from public.songs s join public.band_members bm on bm.band_id = s.band_id where bm.user_id = auth.uid()));
+  using (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
 create policy "votes_insert" on public.votes for insert with check (auth.uid() = user_id);
 create policy "votes_update" on public.votes for update using (user_id = auth.uid());
 create policy "votes_delete" on public.votes for delete using (user_id = auth.uid());
 
 -- REPERTOIRE VOTES
 create policy "rep_votes_select" on public.repertoire_votes for select
-  using (song_id in (select s.id from public.songs s join public.band_members bm on bm.band_id = s.band_id where bm.user_id = auth.uid()));
+  using (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
 create policy "rep_votes_insert" on public.repertoire_votes for insert with check (auth.uid() = user_id);
 create policy "rep_votes_update" on public.repertoire_votes for update using (user_id = auth.uid());
 create policy "rep_votes_delete" on public.repertoire_votes for delete using (user_id = auth.uid());
 
 -- DEFICIENCIES
 create policy "deficiencies_select" on public.deficiencies for select
-  using (song_id in (select s.id from public.songs s join public.band_members bm on bm.band_id = s.band_id where bm.user_id = auth.uid()));
+  using (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
 create policy "deficiencies_insert" on public.deficiencies for insert
-  with check (song_id in (select s.id from public.songs s join public.band_members bm on bm.band_id = s.band_id where bm.user_id = auth.uid()));
+  with check (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
 create policy "deficiencies_update" on public.deficiencies for update
-  using (song_id in (select s.id from public.songs s join public.band_members bm on bm.band_id = s.band_id where bm.user_id = auth.uid()));
+  using (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
 create policy "deficiencies_delete" on public.deficiencies for delete
-  using (song_id in (select s.id from public.songs s join public.band_members bm on bm.band_id = s.band_id where bm.user_id = auth.uid()));
+  using (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
 
 -- REHEARSALS
 create policy "rehearsals_select" on public.rehearsals for select
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 create policy "rehearsals_insert" on public.rehearsals for insert
-  with check (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  with check (band_id in (select public.get_my_band_ids()));
 create policy "rehearsals_update" on public.rehearsals for update
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 create policy "rehearsals_delete" on public.rehearsals for delete
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 
 -- REHEARSAL SONGS
 create policy "rehearsal_songs_select" on public.rehearsal_songs for select
-  using (rehearsal_id in (select r.id from public.rehearsals r join public.band_members bm on bm.band_id = r.band_id where bm.user_id = auth.uid()));
+  using (rehearsal_id in (select r.id from public.rehearsals r where r.band_id in (select public.get_my_band_ids())));
 create policy "rehearsal_songs_insert" on public.rehearsal_songs for insert
-  with check (rehearsal_id in (select r.id from public.rehearsals r join public.band_members bm on bm.band_id = r.band_id where bm.user_id = auth.uid()));
+  with check (rehearsal_id in (select r.id from public.rehearsals r where r.band_id in (select public.get_my_band_ids())));
 create policy "rehearsal_songs_delete" on public.rehearsal_songs for delete
-  using (rehearsal_id in (select r.id from public.rehearsals r join public.band_members bm on bm.band_id = r.band_id where bm.user_id = auth.uid()));
+  using (rehearsal_id in (select r.id from public.rehearsals r where r.band_id in (select public.get_my_band_ids())));
 
 -- LOCATIONS
 create policy "locations_select" on public.locations for select
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
 create policy "locations_insert" on public.locations for insert
-  with check (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  with check (band_id in (select public.get_my_band_ids()));
 create policy "locations_delete" on public.locations for delete
-  using (band_id in (select band_id from public.band_members where user_id = auth.uid()));
+  using (band_id in (select public.get_my_band_ids()));
