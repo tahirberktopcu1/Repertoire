@@ -71,7 +71,7 @@ export default function SongsPage() {
 
   const tabs: { key: TabType; label: string; icon: any; count: number; color: string }[] = [
     { key: 'unrated', label: 'Oy Bekliyor', icon: AlertCircle, count: unratedSongs.length, color: 'var(--danger)' },
-    { key: 'pending', label: 'Beklemede', icon: Clock, count: pendingSongs.length, color: 'var(--warning)' },
+    { key: 'pending', label: 'Diğerlerini Bekliyor', icon: Clock, count: pendingSongs.length, color: 'var(--warning)' },
     { key: 'ready', label: 'Havuz', icon: CheckCircle, count: readySongs.length, color: 'var(--success)' },
   ]
 

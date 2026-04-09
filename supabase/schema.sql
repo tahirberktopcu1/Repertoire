@@ -102,6 +102,14 @@ create table public.locations (
   created_at timestamptz default now() not null
 );
 
+create table public.song_comments (
+  id uuid default uuid_generate_v4() primary key,
+  song_id uuid references public.songs(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  content text not null,
+  created_at timestamptz default now() not null
+);
+
 -- ============================================
 -- 2. HELPER FUNCTION - RLS recursive sorgu çözümü
 -- ============================================
@@ -150,6 +158,7 @@ alter table public.deficiencies enable row level security;
 alter table public.rehearsals enable row level security;
 alter table public.rehearsal_songs enable row level security;
 alter table public.locations enable row level security;
+alter table public.song_comments enable row level security;
 
 -- ============================================
 -- 4. TÜM POLİCY'LER
@@ -235,3 +244,11 @@ create policy "locations_insert" on public.locations for insert
   with check (band_id in (select public.get_my_band_ids()));
 create policy "locations_delete" on public.locations for delete
   using (band_id in (select public.get_my_band_ids()));
+
+-- SONG COMMENTS
+create policy "song_comments_select" on public.song_comments for select
+  using (song_id in (select s.id from public.songs s where s.band_id in (select public.get_my_band_ids())));
+create policy "song_comments_insert" on public.song_comments for insert
+  with check (auth.uid() = user_id);
+create policy "song_comments_delete" on public.song_comments for delete
+  using (user_id = auth.uid());

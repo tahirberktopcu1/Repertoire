@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { SongWithVotes, Vote } from '@/lib/types'
 import ConfirmDialog from './ConfirmDialog'
+import { createClient } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { useBand } from '@/contexts/BandContext'
 import {
   Play,
   CheckCircle,
@@ -12,6 +15,8 @@ import {
   Users,
   Pencil,
   X,
+  MessageCircle,
+  Send,
 } from 'lucide-react'
 
 interface VoteDetail {
@@ -96,6 +101,9 @@ export default function SongCard({
   voteLabel2 = 'Seyirci Tahmini',
   audienceRequired = true,
 }: SongCardProps) {
+  const supabase = createClient()
+  const { user } = useAuth()
+  const { members } = useBand()
   const [showDefPanel, setShowDefPanel] = useState(false)
   const [newDeficiency, setNewDeficiency] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -104,6 +112,75 @@ export default function SongCard({
   const [editArtist, setEditArtist] = useState(song.artist || '')
   const [localRating, setLocalRating] = useState<number | null>(null)
   const [localAudienceRating, setLocalAudienceRating] = useState<number | null | undefined>(undefined)
+
+  // Chat state
+  const [showChat, setShowChat] = useState(false)
+  const [comments, setComments] = useState<{ id: string; user_id: string; content: string; created_at: string; user_name: string }[]>([])
+  const [commentCount, setCommentCount] = useState(0)
+  const [newComment, setNewComment] = useState('')
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  const memberNames: Record<string, string> = {}
+  members.forEach((m: any) => { memberNames[m.user_id] = m.profiles?.full_name || 'Bilinmeyen' })
+
+  // Yorum sayısını çek
+  useEffect(() => {
+    supabase.from('song_comments').select('id', { count: 'exact', head: true }).eq('song_id', song.id)
+      .then(({ count }: any) => setCommentCount(count || 0))
+  }, [song.id])
+
+  // Chat yükle
+  useEffect(() => {
+    if (!showChat) return
+    const loadComments = async () => {
+      const { data } = await supabase
+        .from('song_comments')
+        .select('*, profiles:user_id(full_name)')
+        .eq('song_id', song.id)
+        .order('created_at', { ascending: true })
+      if (data) { setCommentCount(data.length); setComments(data.map((c: any) => ({
+        id: c.id, user_id: c.user_id, content: c.content, created_at: c.created_at,
+        user_name: c.profiles?.full_name || 'Bilinmeyen',
+      }))) }
+    }
+    loadComments()
+
+    // Realtime
+    const channel = supabase
+      .channel(`comments-${song.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'song_comments' }, (payload: any) => {
+        if (payload.eventType === 'INSERT' && payload.new.song_id === song.id) {
+          setComments((prev) => {
+            const updated = [...prev, {
+              id: payload.new.id, user_id: payload.new.user_id, content: payload.new.content,
+              created_at: payload.new.created_at, user_name: memberNames[payload.new.user_id] || 'Bilinmeyen',
+            }]
+            setCommentCount(updated.length)
+            return updated
+          })
+        } else if (payload.eventType === 'DELETE') {
+          setComments((prev) => {
+            const updated = prev.filter((c) => c.id !== payload.old.id)
+            setCommentCount(updated.length)
+            return updated
+          })
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [showChat, song.id])
+
+  // Yeni mesajda scroll
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [comments.length])
+
+  const sendComment = async () => {
+    if (!newComment.trim() || !user) return
+    await supabase.from('song_comments').insert({ song_id: song.id, user_id: user.id, content: newComment.trim() })
+    setNewComment('')
+  }
 
   // userVote güncellenince local state'i sıfırla
   useEffect(() => {
@@ -334,6 +411,16 @@ export default function SongCard({
             </button>
           )}
 
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              showChat ? 'text-[var(--accent)] bg-[var(--accent-subtle)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]'
+            }`}
+          >
+            <MessageCircle className="w-4 h-4" />
+            {commentCount > 0 && <span className="text-xs">{commentCount}</span>}
+          </button>
+
           <div className="flex-1" />
 
           {onAddToRepertoire && (
@@ -398,6 +485,47 @@ export default function SongCard({
             {deficiencies.length === 0 && (
               <p className="text-[var(--text-muted)] text-sm">Henüz eksik girilmemiş</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Chat panel */}
+      {showChat && (
+        <div className="border-t border-[var(--border)] bg-[var(--bg-secondary)]">
+          <div className="max-h-48 overflow-y-auto p-3 space-y-2">
+            {comments.map((c) => (
+              <div key={c.id} className={`flex flex-col ${c.user_id === user?.id ? 'items-end' : 'items-start'}`}>
+                <span className="text-[10px] text-[var(--text-muted)] mb-0.5">{c.user_name}</span>
+                <div className={`px-3 py-1.5 rounded-xl text-sm max-w-[80%] ${
+                  c.user_id === user?.id
+                    ? 'bg-[var(--accent)] text-white rounded-br-sm'
+                    : 'bg-[var(--bg-card)] text-[var(--text-primary)] border border-[var(--border)] rounded-bl-sm'
+                }`}>
+                  {c.content}
+                </div>
+              </div>
+            ))}
+            {comments.length === 0 && (
+              <p className="text-[var(--text-muted)] text-xs text-center py-2">Henüz yorum yok</p>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+          <div className="flex gap-2 p-3 pt-0">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendComment()}
+              className="flex-1 px-3 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              placeholder="Yorum yaz..."
+            />
+            <button
+              onClick={sendComment}
+              disabled={!newComment.trim()}
+              className="p-2 bg-[var(--accent)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              <Send className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
